@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Same Wall</title>
+<meta name="description" content="Lines Kevin found two people secretly share, put up by the players. Same noise, forty years apart.">
+<meta property="og:title" content="The Same ___ wall">
+<meta property="og:description" content="Lines Kevin found two people secretly share. Same noise, forty years apart.">
+<meta property="og:image" content="https://roastedbykevin.com/og.png">
+<meta name="theme-color" content="#F5B323">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="/manifest.webmanifest">
+<style>
+@font-face { font-family: "Shrikhand"; src: url(/fonts/shrikhand.woff2) format("woff2"); font-display: swap; }
+@font-face { font-family: "Archivo"; src: url(/fonts/archivo.woff2) format("woff2"); font-weight: 100 900; font-display: swap; }
+:root { color-scheme: light; --sleeve: #F5B323; --deep: #E89A0C; --ink: #1F1206; --soft: #4A2E0E; --pink: #D81B60; --cream: #FFF4DA; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--sleeve); color: var(--ink); font: 600 17px/1.4 "Archivo", system-ui, sans-serif; }
+::selection { background: var(--pink); color: #fff; }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+main { max-width: 900px; margin: 0 auto; padding: 24px 16px 64px; }
+a.back { color: var(--ink); font-weight: 800; text-underline-offset: 4px; }
+h1 { font: 400 clamp(2.6rem, 11vw, 5.4rem)/0.95 "Shrikhand", cursive; margin: 18px 0 8px; transform: rotate(-4deg); transform-origin: left; text-shadow: 3px 3px 0 var(--deep); }
+.lede { max-width: 46ch; margin: 20px 0 8px; }
+h2 { font-size: 21px; font-weight: 800; margin: 36px 0 12px; }
+.lines { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 14px; list-style: none; padding: 0; margin: 0; }
+.lines li { background: var(--cream); border: 4px solid var(--ink); border-radius: 22px; padding: 16px 18px; box-shadow: 0 6px 14px rgba(110, 60, 0, 0.2); display: grid; gap: 10px; }
+.lines q { font-size: 24px; font-weight: 800; line-height: 1.2; quotes: none; }
+.lines .meta { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--soft); font-variant-numeric: tabular-nums; }
+button { font: 800 14px "Archivo", sans-serif; border: 3px solid var(--ink); border-radius: 999px; padding: 6px 14px; background: var(--sleeve); color: var(--ink); cursor: pointer; min-height: 40px; }
+.tree { list-style: none; padding: 0; margin: 0; border-left: 4px solid var(--ink); }
+.tree li { position: relative; padding: 0 0 18px 22px; }
+.tree li::before { content: ""; position: absolute; left: -12px; top: 4px; width: 20px; height: 20px; border-radius: 50%; background: var(--pink); border: 4px solid var(--ink); }
+.tree b { font-size: 18px; } .tree .t { display: block; color: var(--soft); font-size: 15px; }
+.empty { color: var(--soft); }
+.btnlink { color: var(--ink); font-weight: 800; display: inline-flex; min-height: 48px; align-items: center; padding: 0 20px; border: 3px solid var(--ink); border-radius: 24px; background: var(--cream); text-decoration: none; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="/">Back to Kevin</a>
+  <h1>Same ___</h1>
+  <p class="lede">Every line here is something Kevin found two people from different worlds secretly share. Players put them up themselves. No names, ever.</p>
+
+  <div id="wallEmpty" hidden><p class="lede"><b>Nothing on the wall yet.</b> Lines go up when two people get roasted together and tap Put it on the wall.</p><p><a class="btnlink" href="/">Get roasted with someone</a></p></div>
+  <div id="wallLines">
+  <h2>Most copied</h2>
+  <ul class="lines" id="top"><li class="empty">Loading the wall...</li></ul>
+
+  <h2>Newest</h2>
+  <ul class="lines" id="newest"></ul>
+  </div>
+
+  <h2>Kevin's patch notes</h2>
+  <p class="lede">Kevin is an NPC who knows it. Every week he patches himself from the lines people share most, so the meme keeps mutating. This is his family tree.</p>
+  <ol class="tree" id="tree"></ol>
+</main>
+<script type="module">
+const $ = id => document.getElementById(id);
+function lines(el, list) {
+  el.textContent = '';
+  if (!list.length) { const li = document.createElement('li'); li.className = 'empty'; li.textContent = 'Nothing up here yet. Go get roasted with someone and put yours up.'; el.append(li); return; }
+  for (const w of list) {
+    const li = document.createElement('li'), q = document.createElement('q'), meta = document.createElement('div'), n = document.createElement('span'), b = document.createElement('button');
+    q.textContent = w.line; meta.className = 'meta'; n.textContent = `${w.copies} ${w.copies === 1 ? 'copy' : 'copies'}`;
+    b.type = 'button'; b.textContent = 'Copy line';
+    b.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(w.line); b.textContent = 'Copied'; } catch { b.textContent = 'Select it to copy'; }
+      fetch('/api/wall', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ copy: w.id }) }).catch(() => {});
+    });
+    meta.append(n, b); li.append(q, meta); el.append(li);
+  }
+}
+fetch('/api/wall').then(r => r.json()).then(j => { if (!j.newest?.length) { $('wallLines').hidden = true; $('wallEmpty').hidden = false; return; } lines($('top'), j.top); lines($('newest'), j.newest); })
+  .catch(() => { $('top').innerHTML = '<li class="empty">The wall did not load. Try again in a minute.</li>'; });
+fetch('/api/world').then(r => r.json()).then(j => {
+  for (const p of j.history) {
+    const li = document.createElement('li'), b = document.createElement('b'), t = document.createElement('span');
+    b.textContent = `Patch ${p.version}${p.at ? ' · ' + p.at.slice(0, 10) : ''}`; t.className = 't';
+    t.textContent = `${p.notes} Template: "${p.template.replace('{a}', 'A').replace('{b}', 'B').replace('{thing}', '___').replace('{n}', 'N')}"`;
+    li.append(b, t); $('tree').append(li);
+  }
+}).catch(() => {});
+</script>
+</body>
+</html>

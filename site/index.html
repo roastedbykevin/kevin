@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kevin wants to roast you</title>
+<meta name="description" content="Bring someone from another generation. Kevin roasts you both, then finds the one thing you secretly share.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://roastedbykevin.com/">
+<meta property="og:title" content="Kevin wants to roast you">
+<meta property="og:description" content="Bring someone from another generation. Kevin roasts you both, then finds the one thing you secretly share.">
+<meta property="og:image" content="https://roastedbykevin.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Kevin, a grinning cartoon head in front of a spinning record, on a marigold album sleeve">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#F5B323">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Kevin">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preload" href="/fonts/shrikhand.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face { font-family: "Shrikhand"; src: url(/fonts/shrikhand.woff2) format("woff2"); font-display: swap; }
+@font-face { font-family: "Archivo"; src: url(/fonts/archivo.woff2) format("woff2"); font-weight: 100 900; font-display: swap; }
+:root {
+  color-scheme: light;
+  --sleeve: #F5B323; --sleeve-deep: #E89A0C; --ink: #1F1206; --ink-soft: #4A2E0E;
+  --pink: #D81B60; --pink-deep: #A3124A; --cream: #FFF4DA; --skin: #9A5B3A; --skin-deep: #7A4329;
+  --vinyl: #17110B; --groove: #3A2C1E;
+  --line: 4px;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--sleeve); color: var(--ink);
+  font: 600 17px/1.4 "Archivo", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased; overflow-x: hidden;
+}
+::selection { background: var(--pink); color: #fff; }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+
+.sleeve {
+  min-height: 100dvh; max-width: 1240px; margin: 0 auto;
+  padding: max(14px, env(safe-area-inset-top)) 16px max(14px, env(safe-area-inset-bottom));
+  display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr auto; gap: 8px;
+}
+.sleeve > *, .right > * { min-width: 0; }
+header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+h1 {
+  margin: 10px 0 0; font: 400 clamp(3.4rem, 15vw, 6rem)/0.9 "Shrikhand", cursive; letter-spacing: -0.01em;
+  transform: rotate(-5deg); transform-origin: left bottom; color: var(--ink);
+  text-shadow: 3px 3px 0 var(--sleeve-deep);
+}
+.tag { margin: 10px 0 0 4px; font-weight: 800; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); }
+.mute {
+  width: 48px; height: 48px; border-radius: 50%; border: var(--line) solid var(--ink); background: var(--cream);
+  display: grid; place-items: center; flex: none;
+}
+.mute svg { width: 24px; height: 24px; }
+.mute[aria-pressed="false"] .wave { display: none; }
+.mute[aria-pressed="true"] .x { display: none; }
+
+.stage { display: grid; align-content: center; justify-items: center; gap: 4px; min-height: 0; }
+#kev { width: min(76vw, 42dvh, 420px); height: auto; overflow: visible; transition: width 0.5s cubic-bezier(.2,.9,.3,1); }
+.chatting #kev { width: min(52vw, 28dvh, 300px); }
+
+/* the balloon */
+.balloon {
+  position: relative; width: 100%; max-width: 560px; background: var(--cream);
+  border: var(--line) solid var(--ink); border-radius: 26px; padding: 14px 18px 16px;
+  box-shadow: 0 6px 14px rgba(110, 60, 0, 0.22);
+}
+.balloon::before {
+  content: ""; position: absolute; left: 50%; top: -17px; width: 26px; height: 26px; background: var(--cream);
+  border-left: var(--line) solid var(--ink); border-top: var(--line) solid var(--ink);
+  transform: translateX(-50%) rotate(45deg); border-radius: 4px 0 0 0;
+}
+.you { margin: 0 0 4px; font-size: 14px; font-weight: 600; color: var(--ink-soft); min-height: 0; }
+.you:empty { display: none; }
+.you b { font-weight: 800; }
+.says { margin: 0; font-size: clamp(19px, 2.2vw + 12px, 26px); font-weight: 700; line-height: 1.28; text-wrap: pretty; min-height: 2.56em; }
+.dots i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 50%; background: var(--ink); animation: dot 0.9s infinite ease-in-out; }
+.dots i:nth-child(2) { animation-delay: 0.15s; } .dots i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes dot { 0%, 100% { transform: translateY(0); opacity: 0.35; } 50% { transform: translateY(-6px); opacity: 1; } }
+
+/* controls */
+.deck { width: 100%; max-width: 560px; justify-self: center; display: grid; gap: 12px; }
+.row { display: flex; gap: 12px; align-items: center; }
+.roast {
+  flex: 1; height: 64px; border-radius: 32px; border: var(--line) solid var(--ink); background: var(--pink); color: #fff;
+  font-weight: 800; font-size: 21px; letter-spacing: 0.01em; box-shadow: 0 5px 0 var(--pink-deep), 0 8px 16px rgba(110, 20, 40, 0.25);
+  transition: transform 0.12s cubic-bezier(.2,.9,.3,1), box-shadow 0.12s;
+}
+.roast:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--pink-deep), 0 3px 8px rgba(110, 20, 40, 0.2); }
+.talk { display: grid; justify-items: center; gap: 2px; flex: none; }
+.mic {
+  width: 72px; height: 72px; border-radius: 50%; border: var(--line) solid var(--ink); padding: 0; position: relative;
+  background: radial-gradient(circle, var(--pink) 0 34%, var(--vinyl) 35% 100%); /* a record: pink label on vinyl */
+  box-shadow: 0 6px 14px rgba(60, 30, 0, 0.3); touch-action: none; user-select: none; -webkit-user-select: none;
+}
+.mic::after { content: ""; position: absolute; inset: 6px; border-radius: 50%; border: 1px solid var(--groove); box-shadow: inset 0 0 0 6px var(--vinyl), inset 0 0 0 7px var(--groove); pointer-events: none; }
+.mic svg { position: relative; z-index: 1; width: 26px; height: 26px; color: #fff; }
+.mic[data-on] { animation: ring 1s infinite; }
+@keyframes ring { 0% { box-shadow: 0 0 0 0 rgba(216, 27, 96, 0.55); } 100% { box-shadow: 0 0 0 18px rgba(216, 27, 96, 0); } }
+.talk small { font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); }
+form.type { display: flex; height: 52px; border: var(--line) solid var(--ink); border-radius: 26px; background: var(--cream); overflow: hidden; }
+form.type:focus-within { box-shadow: 0 0 0 3px var(--sleeve), 0 0 0 6px var(--ink); }
+form.type input { flex: 1; min-width: 0; border: 0; background: transparent; padding: 0 6px 0 20px; font-size: 17px; font-weight: 600; caret-color: var(--pink); outline: none; }
+form.type input::placeholder { color: #7a6142; }
+form.type button { width: 52px; border: 0; border-left: var(--line) solid var(--ink); background: var(--ink); color: var(--sleeve); display: grid; place-items: center; }
+form.type button svg { width: 22px; height: 22px; }
+form.type button:disabled { opacity: 0.55; cursor: default; }
+.share {
+  margin: 8px 0 -6px; border: 0; background: none; padding: 8px 0; font-weight: 800; font-size: 16px; display: inline-flex; gap: 8px; align-items: center;
+  text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px;
+}
+.share svg { width: 20px; height: 20px; }
+.fine { margin: 0; font-size: 12px; font-weight: 600; color: var(--ink-soft); text-align: center; }
+.toast {
+  position: fixed; left: 50%; bottom: max(24px, env(safe-area-inset-bottom)); transform: translate(-50%, calc(100% + 48px)); visibility: hidden;
+  background: var(--ink); color: var(--cream); padding: 12px 20px; border-radius: 999px; font-weight: 700;
+  transition: transform 0.35s cubic-bezier(.2,.9,.3,1); pointer-events: none; white-space: normal; max-width: calc(100vw - 32px); text-align: center;
+}
+.toast.show { transform: translate(-50%, 0); visibility: visible; }
+.no-voice .talk { display: none; }
+
+/* ---- Kevin ---- */
+#kev .spin { transform-origin: 200px 200px; }
+#kev .head { transform-origin: 200px 360px; transition: transform 0.35s cubic-bezier(.2,.9,.3,1); }
+#kev .brow { transition: transform 0.3s cubic-bezier(.2,.9,.3,1); transform-box: fill-box; transform-origin: center; }
+#kev .pupils { transition: transform 0.25s cubic-bezier(.2,.9,.3,1); }
+#kev .eye { transform-box: fill-box; transform-origin: center; animation: blink 4.6s infinite; }
+#kev .laugh-eyes, #kev .open { opacity: 0; }
+#kev .open { transform-box: fill-box; transform-origin: top center; }
+#kev .cheek { opacity: 0.35; transition: opacity 0.3s; }
+@keyframes blink { 0%, 95%, 100% { transform: scaleY(1); } 97% { transform: scaleY(0.1); } }
+#kev[data-s="idle"] .head { animation: bob 3.2s ease-in-out infinite; }
+@keyframes bob { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(1.5deg) translateY(-3px); } }
+#kev[data-s="listening"] .head { transform: rotate(-6deg); }
+#kev[data-s="listening"] .brow { transform: translateY(-12px); }
+#kev[data-s="listening"] .ear-l { fill: var(--pink); }
+#kev[data-s="thinking"] .spin { animation: spin 1.6s linear infinite; }
+#kev[data-s="thinking"] .pupils { transform: translate(9px, -10px); }
+#kev[data-s="thinking"] .brow-l { transform: translateY(-14px) rotate(-8deg); }
+#kev[data-s="thinking"] .grin { transform: translateX(14px); }
+#kev .grin { transition: transform 0.3s; }
+@keyframes spin { to { transform: rotate(360deg); } }
+#kev[data-s="talking"] .grin, #kev[data-s="laughing"] .grin { opacity: 0; }
+#kev[data-s="talking"] .open { opacity: 1; animation: jaw 0.2s ease-in-out infinite alternate; }
+#kev[data-s="talking"] .spin { animation: spin 4s linear infinite; }
+@keyframes jaw { from { transform: scaleY(0.35); } to { transform: scaleY(1); } }
+#kev[data-s="laughing"] .open { opacity: 1; }
+#kev[data-s="laughing"] .eyes-open { opacity: 0; }
+#kev[data-s="laughing"] .laugh-eyes { opacity: 1; }
+#kev[data-s="laughing"] .cheek { opacity: 0.9; }
+#kev[data-s="laughing"] .brow { transform: translateY(-8px); }
+#kev[data-s="laughing"] .head { animation: cackle 0.14s ease-in-out infinite alternate; }
+@keyframes cackle { from { transform: rotate(-3deg) translateY(0); } to { transform: rotate(3deg) translateY(-6px); } }
+
+@media (min-width: 900px) {
+  .chatting #kev, #kev { width: min(100%, 64dvh, 560px); }
+  .sleeve { grid-template-columns: 1.15fr 1fr; grid-template-rows: auto 1fr; column-gap: 56px; padding: 40px 48px; }
+  header { grid-column: 1 / -1; }
+  .stage { grid-row: 2; grid-column: 1; align-self: start; position: sticky; top: 24px; }
+  .right { grid-row: 2; grid-column: 2; display: grid; align-content: start; gap: 28px; padding-top: 24px; }
+  .balloon::before { left: -17px; top: 44px; transform: rotate(-45deg); }
+  .says { font-size: 28px; }
+}
+@media (max-width: 899px) { .right { display: contents; } .right .balloon { grid-row: auto; } }
+@media (max-height: 700px) and (max-width: 899px) { #kev { width: min(62vw, 34dvh); } h1 { font-size: 3rem; } .tag { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  #kev *, .mic, .dots i { animation: none !important; transition: none !important; }
+  #kev[data-s="talking"] .open { transform: scaleY(0.8); }
+}
+.tools { display: flex; gap: 10px; align-items: center; flex: none; }
+.pill {
+  margin-top: 12px; height: 44px; padding: 0 16px; border-radius: 24px; border: var(--line) solid var(--ink); background: var(--cream);
+  font-weight: 800; font-size: 15px; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+}
+.pill svg { width: 20px; height: 20px; }
+.standalone #getApp { display: none; }
+.card {
+  background: var(--cream); border: var(--line) solid var(--ink); border-radius: 22px; padding: 14px 18px;
+  box-shadow: 0 6px 14px rgba(110, 60, 0, 0.22);
+}
+.card h2 { margin: 0 0 6px; font-size: 19px; font-weight: 800; }
+.card p { margin: 0 0 8px; }
+.card ul { margin: 0 0 8px; padding-left: 20px; }
+.card .x { float: right; border: 0; background: none; font-weight: 800; font-size: 15px; padding: 4px 0 8px 12px; text-decoration: underline; text-underline-offset: 3px; }
+#installHelp { position: absolute; right: 16px; top: 76px; width: min(360px, calc(100vw - 32px)); z-index: 5; }
+#installHelp li.you-are-here { font-weight: 800; }
+.balloon-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.thumbs { display: inline-flex; gap: 8px; }
+.thumbs button { width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--ink); background: var(--sleeve); display: grid; place-items: center; }
+.thumbs button svg { width: 20px; height: 20px; }
+.thumbs button[aria-pressed="true"] { background: var(--pink); color: #fff; }
+.rate { display: flex; gap: 8px; margin-top: 10px; }
+.rate input, .field input {
+  flex: 1; min-width: 0; height: 44px; border: 3px solid var(--ink); border-radius: 22px; background: #fff; padding: 0 14px;
+  font-size: 16px; font-weight: 600; caret-color: var(--pink); outline: none;
+}
+.rate input:focus, .field input:focus { box-shadow: 0 0 0 3px var(--sleeve), 0 0 0 6px var(--ink); }
+.btn { height: 44px; padding: 0 16px; border-radius: 22px; border: 3px solid var(--ink); font-weight: 800; font-size: 15px; background: var(--cream); white-space: nowrap; }
+.btn.go { background: var(--pink); color: #fff; }
+.btn:disabled { opacity: 0.55; cursor: default; }
+.friend-open { justify-self: center; }
+.field { display: grid; gap: 4px; margin: 0 0 10px; font-size: 14px; font-weight: 800; }
+.field span { color: var(--ink-soft); font-weight: 600; }
+.field input { width: 100%; flex: none; }
+.linkout { word-break: break-all; font-size: 14px; background: #fff; border: 2px dashed var(--ink); border-radius: 12px; padding: 8px 10px; margin: 0 0 10px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+#verdict h3 { margin: 12px 0 2px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); }
+#verdict .count { font-weight: 600; color: var(--ink-soft); font-size: 15px; }
+.panel { width: 100%; max-width: 560px; justify-self: center; }
+@media (min-width: 900px) { #installHelp { right: 48px; top: 100px; } }
+@media (max-width: 899px) { .tag { display: none; } #installHelp { top: 150px; } }
+.tag { max-width: 34ch; letter-spacing: 0.1em; }
+.balloon .tagname {
+  position: absolute; left: 18px; top: -14px; background: var(--ink); color: var(--cream); border: 3px solid var(--ink); border-radius: 8px;
+  padding: 1px 10px; font-size: 12px; font-weight: 800; letter-spacing: 0.12em;
+}
+.balloon { padding-top: 20px; }
+#kev .quest { display: none; } /* review S6: the floating "!" read as an error */
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips button { height: 44px; padding: 0 16px; border-radius: 22px; border: 3px solid var(--ink); background: var(--cream); font-weight: 800; font-size: 15px; }
+.row form.type { flex: 1; min-width: 0; }
+.chips button.go { background: var(--pink); color: #fff; }
+.pairform .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pairform .roast { width: 100%; margin-top: 4px; }
+#cardPanel img { width: 100%; height: auto; border-radius: 14px; border: 3px solid var(--ink); display: block; margin: 0 0 10px; }
+.check { display: flex; gap: 10px; align-items: center; font-weight: 700; margin: 0 0 10px; }
+.check input { width: 22px; height: 22px; accent-color: var(--pink); }
+a.btn { display: inline-flex; align-items: center; color: var(--ink); text-decoration: none; }
+.questlog { font-weight: 700; } .questlog summary { cursor: pointer; } .questlog ul { margin: 6px 0 0; padding-left: 20px; font-weight: 600; }
+.fine a { color: var(--ink); font-weight: 800; text-underline-offset: 3px; }
+.answering .pairform, .tester .pairform, .paired .pairform { display: none; }
+@media (prefers-reduced-motion: reduce) { #kev .quest { animation: none; } }
+.report { margin-left: auto; border: 0; background: none; font-weight: 700; font-size: 14px; color: var(--ink-soft); text-decoration: underline; text-underline-offset: 3px; padding: 8px 0; }
+.nudge { font-weight: 800; background: var(--sleeve); border-radius: 12px; padding: 8px 12px; }
+.gone { position: fixed; inset: 0; background: rgba(31, 18, 6, 0.86); display: grid; place-items: center; padding: 16px; z-index: 20; }
+.gone .card { max-width: 460px; }
+.gone a { color: var(--ink); font-weight: 800; }
+.gone-hide, body.gone .deck, body.gone .pairform, body.gone #cardPanel { display: none; }
+.stamp { display: inline-block; margin: 8px 0 0 4px; border: 3px solid var(--pink); color: var(--pink); border-radius: 10px; padding: 2px 10px; font-weight: 800; font-size: 13px; letter-spacing: 0.06em; text-decoration: none; transform: rotate(-3deg); background: var(--cream); }
+.stuck { display: flex; flex-wrap: wrap; gap: 6px; margin: -4px 0 10px; }
+.stuck button { border: 2px dashed var(--ink); background: var(--sleeve); border-radius: 16px; padding: 6px 12px; font-weight: 700; font-size: 14px; }
+#giftPanel img, #rulingImg { width: 100%; height: auto; border-radius: 14px; border: 3px solid var(--ink); display: block; margin: 0 0 10px; }
+.receiving .giftform, .receiving .pairform, .jury .giftform, .jury .pairform, .tester .giftform, .answering .giftform, .paired .giftform { display: none; }
+#kev .hat, #kev .prop { display: none; }
+#kev[data-hat="cap"] .hat-cap, #kev[data-hat="beret"] .hat-beret, #kev[data-hat="crown"] .hat-crown, #kev[data-hat="headphones"] .hat-headphones, #kev[data-hat="bucket"] .hat-bucket { display: inline; }
+#kev[data-prop="popcorn"] .prop-popcorn, #kev[data-prop="clapper"] .prop-clapper { display: inline; }
+#kev [fill="#F5B323"] { fill: var(--sleeve); } #kev [stroke="#F5B323"] { stroke: var(--sleeve); } #kev [fill="#D81B60"] { fill: var(--pink); }
+.remix { display: block; margin: 6px 0 0 4px; font-size: 13px; font-weight: 800; color: var(--ink-soft); }
+.formmsg { margin: 8px 0 0; font-weight: 700; min-height: 0; } .formmsg:empty { display: none; }
+body.fresh .deck .chips, body.fresh .deck .row { display: none; }
+.remixback { color: var(--ink); font-weight: 800; text-underline-offset: 3px; }
+.starts { text-align: center; } .starts .share { display: block; margin: 4px auto; }
+/* the gift form is a balloon too: it gets the tail */
+.giftform { position: relative; }
+</style>
+</head>
+<body class="fresh">
+<main class="sleeve">
+  <header>
+    <div>
+      <h1>Kevin</h1>
+      <p class="tag">Kevin is the comedian who has met every generation.</p>
+      <a class="stamp" id="stamp" href="/verify" title="Check that this is the original Kevin">Original Kevin ✓</a>
+      <button class="pill" id="getApp" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+        Get the Kevin app
+      </button>
+    </div>
+    <div class="tools">
+    <button class="mute" id="mute" type="button" aria-pressed="true" aria-label="Kevin's voice is on. Turn it off">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/>
+        <path class="wave" d="M15.5 9a4.2 4.2 0 0 1 0 6M18.2 6.5a8 8 0 0 1 0 11"/>
+        <path class="x" d="M16 9.5l5 5M21 9.5l-5 5"/>
+      </svg>
+    </button>
+    </div>
+    <div class="card" id="installHelp" hidden>
+      <button class="x" type="button" data-close="installHelp">Close</button>
+      <h2>Put Kevin on your home screen</h2>
+      <p>Free, no app store. Pick your device:</p>
+      <ul>
+        <li data-os="ios">iPhone or iPad (Safari): tap Share, then Add to Home Screen.</li>
+        <li data-os="android">Android (Chrome): tap the menu, then Install app.</li>
+        <li data-os="macsafari">Mac (Safari): File, then Add to Dock.</li>
+        <li data-os="chromium">Windows or Mac (Chrome or Edge): click the install icon at the right end of the address bar.</li>
+        <li data-os="firefox">Firefox: it can't install apps. Open this link in Chrome, Edge or Safari.</li>
+      </ul>
+    </div>
+  </header>
+
+  <section class="stage" aria-label="Kevin">
+    <svg id="kev" data-s="idle" viewBox="0 0 400 400" role="img" aria-label="Kevin, a grinning cartoon head in front of a record">
+      <g class="spin">
+        <circle cx="200" cy="200" r="192" fill="#17110B" stroke="#1F1206" stroke-width="6"/>
+        <g fill="none" stroke="#3A2C1E" stroke-width="1.5">
+          <circle cx="200" cy="200" r="178"/><circle cx="200" cy="200" r="168"/><circle cx="200" cy="200" r="158"/>
+          <circle cx="200" cy="200" r="148"/><circle cx="200" cy="200" r="138"/><circle cx="200" cy="200" r="128"/>
+        </g>
+        <path d="M200 14 A186 186 0 0 1 362 106" fill="none" stroke="#FFF4DA" stroke-opacity="0.32" stroke-width="10" stroke-linecap="round"/>
+        <path d="M200 386 A186 186 0 0 1 38 294" fill="none" stroke="#FFF4DA" stroke-opacity="0.18" stroke-width="7" stroke-linecap="round"/>
+      </g>
+      <g class="head">
+        <g fill="#F5B323" stroke="#F5B323" stroke-width="16" stroke-linejoin="round">
+          <circle cx="84" cy="228" r="27"/><circle cx="316" cy="228" r="27"/>
+          <path d="M200 74 C292 74 322 150 322 222 C322 302 270 352 200 352 C130 352 78 302 78 222 C78 150 108 74 200 74 Z"/>
+        </g>
+        <circle class="ear-l" cx="84" cy="228" r="27" fill="#9A5B3A" stroke="#1F1206" stroke-width="6"/>
+        <circle cx="316" cy="228" r="27" fill="#9A5B3A" stroke="#1F1206" stroke-width="6"/>
+        <path d="M200 84 C292 84 322 150 322 222 C322 302 270 352 200 352 C130 352 78 302 78 222 C78 150 108 84 200 84 Z" fill="#9A5B3A" stroke="#1F1206" stroke-width="6"/>
+        <path d="M98 150 C100 102 140 74 200 74 C262 74 302 102 304 150 C290 128 262 118 236 122 C214 108 182 108 160 122 C138 116 112 128 98 150 Z" fill="#1F1206"/>
+        <ellipse class="cheek" cx="118" cy="268" rx="22" ry="13" fill="#D81B60"/>
+        <ellipse class="cheek" cx="282" cy="268" rx="22" ry="13" fill="#D81B60"/>
+        <g class="eyes-open">
+          <g class="eye"><ellipse cx="155" cy="200" rx="27" ry="31" fill="#FFF4DA" stroke="#1F1206" stroke-width="5"/></g>
+          <g class="eye"><ellipse cx="245" cy="200" rx="27" ry="31" fill="#FFF4DA" stroke="#1F1206" stroke-width="5"/></g>
+          <g class="pupils" fill="#1F1206">
+            <circle cx="159" cy="206" r="12"/><circle cx="249" cy="206" r="12"/>
+            <circle cx="163" cy="201" r="4" fill="#FFF4DA"/><circle cx="253" cy="201" r="4" fill="#FFF4DA"/>
+          </g>
+        </g>
+        <g class="laugh-eyes" fill="none" stroke="#1F1206" stroke-width="9" stroke-linecap="round">
+          <path d="M130 208 Q155 178 180 208"/><path d="M220 208 Q245 178 270 208"/>
+        </g>
+        <path class="brow brow-l" d="M122 158 Q150 140 182 152" fill="none" stroke="#1F1206" stroke-width="13" stroke-linecap="round"/>
+        <path class="brow" d="M218 152 Q250 140 278 158" fill="none" stroke="#1F1206" stroke-width="13" stroke-linecap="round"/>
+        <path d="M192 226 Q186 252 200 256 Q214 256 210 244" fill="none" stroke="#7A4329" stroke-width="6" stroke-linecap="round"/>
+        <path class="grin" d="M142 280 Q200 326 262 276" fill="none" stroke="#1F1206" stroke-width="8" stroke-linecap="round"/>
+        <g class="open">
+          <path d="M138 272 Q200 268 262 272 Q254 344 200 346 Q146 344 138 272 Z" fill="#3A0E14" stroke="#1F1206" stroke-width="6" stroke-linejoin="round"/>
+          <path d="M146 276 Q200 273 254 276 L252 290 Q200 287 148 290 Z" fill="#FFF4DA"/>
+          <path d="M166 334 Q200 306 234 334 Q218 344 200 345 Q182 344 166 334 Z" fill="#D81B60"/>
+        </g>
+      </g>
+      <g class="hats" aria-hidden="true">
+        <g class="hat hat-cap"><path d="M104 132 Q112 58 200 54 Q288 58 296 132 Z" fill="var(--pink)" stroke="#1F1206" stroke-width="6" stroke-linejoin="round"/><path d="M286 128 Q340 126 352 142 Q320 148 284 140 Z" fill="var(--pink)" stroke="#1F1206" stroke-width="6" stroke-linejoin="round"/></g>
+        <g class="hat hat-beret"><ellipse cx="190" cy="92" rx="118" ry="36" transform="rotate(-8 190 92)" fill="var(--pink)" stroke="#1F1206" stroke-width="6"/><path d="M188 58 v-16" stroke="#1F1206" stroke-width="8" stroke-linecap="round"/></g>
+        <g class="hat hat-crown"><path d="M118 118 L132 40 L170 86 L200 26 L230 86 L268 40 L282 118 Z" fill="#FFD54A" stroke="#1F1206" stroke-width="6" stroke-linejoin="round"/></g>
+        <g class="hat hat-headphones"><path d="M64 236 Q60 52 200 50 Q340 52 336 236" fill="none" stroke="#1F1206" stroke-width="16" stroke-linecap="round"/><rect x="44" y="198" width="44" height="78" rx="18" fill="var(--pink)" stroke="#1F1206" stroke-width="6"/><rect x="312" y="198" width="44" height="78" rx="18" fill="var(--pink)" stroke="#1F1206" stroke-width="6"/></g>
+        <g class="hat hat-bucket"><path d="M118 122 L140 52 L260 52 L282 122 Z" fill="var(--pink)" stroke="#1F1206" stroke-width="6" stroke-linejoin="round"/><ellipse cx="200" cy="124" rx="112" ry="16" fill="var(--pink)" stroke="#1F1206" stroke-width="6"/></g>
+      </g>
+      <g class="props" aria-hidden="true">
+        <g class="prop prop-popcorn"><path d="M304 300 L376 300 L366 392 L314 392 Z" fill="#FFF4DA" stroke="#1F1206" stroke-width="6" stroke-linejoin="round"/><path d="M322 300 L326 392 M340 300 L340 392 M358 300 L354 392" stroke="var(--pink)" stroke-width="8"/><circle cx="318" cy="292" r="13" fill="#FFF4DA" stroke="#1F1206" stroke-width="4"/><circle cx="340" cy="284" r="14" fill="#FFF4DA" stroke="#1F1206" stroke-width="4"/><circle cx="362" cy="292" r="13" fill="#FFF4DA" stroke="#1F1206" stroke-width="4"/></g>
+        <g class="prop prop-clapper"><rect x="296" y="316" width="90" height="70" rx="6" fill="#1F1206"/><path d="M296 316 L386 316 L380 292 L292 298 Z" fill="#FFF4DA" stroke="#1F1206" stroke-width="5" stroke-linejoin="round"/><path d="M306 298 L318 316 M330 296 L342 316 M354 294 L366 316" stroke="#1F1206" stroke-width="7"/><path d="M308 340 h60 M308 360 h44" stroke="#FFF4DA" stroke-width="5" stroke-linecap="round"/></g>
+      </g>
+      <g class="quest" aria-hidden="true">
+        <path d="M352 6 L378 34 L352 62 L326 34 Z" fill="#D81B60" stroke="#1F1206" stroke-width="6" stroke-linejoin="round"/>
+        <path d="M352 20 V38" stroke="#FFF4DA" stroke-width="7" stroke-linecap="round"/><circle cx="352" cy="49" r="4" fill="#FFF4DA"/>
+      </g>
+    </svg>
+  </section>
+
+  <div class="right">
+    <div class="balloon" aria-live="polite">
+      <span class="tagname" aria-hidden="true">KEVIN · NPC</span>
+      <p class="you" id="you"></p>
+      <p class="says" id="says">Hey, I'm Kevin. Tiny guy, big mouth. Hit Riff it, or tell me one thing you watched, played or lived through.</p>
+      <div class="balloon-foot" id="balloonFoot" hidden>
+        <button class="share" id="share" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>
+          Share this roast
+        </button>
+        <span class="thumbs" role="group" aria-label="Rate this line">
+          <button type="button" id="up" aria-pressed="false" aria-label="That one landed">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 11v9H4v-9zM7 11l4-8a2.5 2.5 0 0 1 2.5 2.5V9h5a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.3 20H7"/></svg>
+          </button>
+          <button type="button" id="down" aria-pressed="false" aria-label="That one missed">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 13V4h3v9zM17 13l-4 8a2.5 2.5 0 0 1-2.5-2.5V15h-5a2 2 0 0 1-2-2.3l1.2-7A2 2 0 0 1 6.7 4H17"/></svg>
+          </button>
+        </span>
+        <button class="report" id="report" type="button">Report</button>
+      </div>
+      <form class="rate" id="rate" hidden autocomplete="off">
+        <input id="rateNote" maxlength="200" placeholder="Why? One line for Kevin's maker (optional)" aria-label="Why, in one line (optional)">
+        <button class="btn go" type="submit">Send rating</button>
+      </form>
+    </div>
+
+    <form class="card panel giftform" id="giftForm" autocomplete="off">
+      <h2>Send a friend a Riff gift</h2>
+      <p>Kevin riffs on something you two watched. They get a mystery link: guess who sent it.</p>
+      <label class="field">Their first name <input id="gTo" maxlength="20" required></label>
+      <label class="field">What did you share? <span>a film, show, game, trend, moment</span><input id="gShared" maxlength="60" required></label>
+      <div class="stuck" id="stuck" aria-label="Stuck? Try one of these"></div>
+      <label class="field">Your first name <span>only shown if you choose</span><input id="gFrom" maxlength="20"></label>
+      <label class="check"><input type="checkbox" id="gReveal"> Let them know it's me</label>
+      <button class="roast" type="submit" id="gGo">Make the Riff gift</button>
+      <p class="formmsg" id="gStatus" aria-live="polite"></p>
+      <p class="fine starts"><button class="share" type="button" id="pairOpen">Together right now? Kevin roasts you both</button><button class="share" type="button" id="talkOpen">Or just talk to Kevin</button></p>
+    </form>
+
+    <form class="card panel pairform" id="pairForm" autocomplete="off" hidden>
+      <h2>Kevin roasts you both</h2>
+      <p>Two people, one shared thing. He riffs on it with you, then finds what you secretly share and leaves it for three friends to judge who riffed it better.</p>
+      <div class="two">
+        <label class="field">Your first name <input id="pA" maxlength="20" required></label>
+        <label class="field">Who's with you? <span>first name</span><input id="pB" maxlength="20" required></label>
+      </div>
+      <label class="field">What did you two watch, play or live through? <input id="pShared" maxlength="60"></label>
+      <button class="roast" type="submit" id="pGo">Roast us both</button>
+    </form>
+
+    <section class="card panel" id="giftPanel" hidden>
+      <h2 id="giftTitle">Your Riff gift</h2>
+      <img id="giftImg" alt="Kevin's riff card" width="1080" height="1350">
+      <div class="actions">
+        <button class="btn go" type="button" id="giftSend">Send it to them</button>
+        <a class="btn" id="giftSave" download="kevin-riff-gift.png">Save image</a>
+      </div>
+    </section>
+
+    <section class="card panel" id="juryPanel" hidden aria-live="polite">
+      <h2 id="juryTitle">Who riffed it better?</h2>
+      <p id="juryLine"></p>
+      <div class="actions" id="juryVote">
+        <button class="btn" type="button" id="voteA"></button>
+        <button class="btn" type="button" id="voteB"></button>
+      </div>
+      <p id="juryTally" class="fine"></p>
+      <img id="rulingImg" alt="Kevin's ruling card" width="1080" height="1350" hidden>
+      <div class="actions"><button class="btn" type="button" id="rulingShare" hidden>Post Kevin's ruling</button><button class="btn" type="button" id="juryStart" hidden>Start your own</button></div>
+    </section>
+
+    <section class="card panel" id="cardPanel" hidden>
+      <h2 id="cTitle">Your roast card</h2>
+      <img id="cImg" alt="Your roast card" width="1080" height="1350">
+      <label class="check"><input type="checkbox" id="cNames"> Show our first names on the card</label>
+      <div class="actions">
+        <button class="btn go" type="button" id="cJury">Let 3 friends decide who got roasted harder</button>
+        <button class="btn" type="button" id="cSend">Send it to them to answer back</button>
+        <button class="btn" type="button" id="cWall">Put it on the wall</button>
+        <a class="btn" id="cSave" download="kevin-roast-card.png">Save image</a>
+      </div>
+    </section>
+
+    <div class="deck">
+      <div class="chips" id="chips" role="group" aria-label="Say a catchphrase"></div>
+      <div class="row">
+        <div class="talk">
+          <button class="mic" id="mic" type="button" aria-label="Hold to talk to Kevin">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>
+            </svg>
+          </button>
+          <small id="micLabel">Hold to talk</small>
+        </div>
+      <form class="type" id="type" autocomplete="off">
+        <input id="msg" name="msg" maxlength="300" placeholder="Type to Kevin" aria-label="Type something to Kevin" enterkeyhint="send">
+        <button type="submit" id="send" aria-label="Send to Kevin">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+        </button>
+      </form>
+      </div>
+      <button class="share friend-open" id="friendOpen" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 11a4 4 0 1 0-8 0 4 4 0 0 0 8 0zM4 21a8 8 0 0 1 16 0M19 3v6M16 6h6"/></svg>
+        Send Kevin to a friend
+      </button>
+      <details class="questlog" id="shelf" hidden><summary>Your shared shelf <span id="shelfCount"></span></summary><ul id="shelfList"></ul><p class="fine">Kept only on this device.</p></details>
+      <details class="questlog" id="questlog" hidden><summary>Quest log <span id="qCount"></span></summary><ul id="qList"></ul></details>
+      <p class="fine"><span id="lore"></span> <a href="/wall">The Same ___ wall and Kevin's patch notes</a></p>
+      <p class="fine">Kevin is a cartoon with an AI brain. Nothing you say is saved unless you tap Send, Share, Report or Put it on the wall. Kevin lives in one place. Links point there. <a href="/spirit">Why Kevin riffs</a> · <a href="/hack">Hack Kevin</a> · <a href="/make">Make your Kevin</a></p>
+    </div>
+
+    <form class="card panel" id="friend" hidden autocomplete="off">
+      <button class="x" type="button" data-close="friend">Close</button>
+      <h2>Make a friend's Kevin link</h2>
+      <p>Kevin will greet them by name and put them to work as his tester. The link only greets them; Kevin never talks about anyone who isn't there.</p>
+      <p class="nudge" id="friendNudge" hidden>Pass Kevin to one or two friends: someone about ten years younger and someone about ten years older. That's how he travels best.</p>
+      <label class="field">Their first name <input id="fName" maxlength="20" required></label>
+      <label class="field">One thing they love <span>a show, a food, a team</span><input id="fLoves" maxlength="60"></label>
+      <label class="field">Their age <span>optional</span><input id="fAge" inputmode="numeric" maxlength="2"></label>
+      <div class="linkout" id="fLink" hidden></div>
+      <div class="actions">
+        <button class="btn go" type="submit" id="fMake">Make their link</button>
+        <button class="btn" type="button" id="fShare" hidden>Share link</button>
+      </div>
+    </form>
+
+    <section class="card panel" id="verdict" hidden aria-live="polite">
+      <h2><span id="vTitle">Your verdict</span> <span class="count" id="vCount"></span></h2>
+      <div id="vBody"></div>
+      <div class="actions">
+        <button class="btn go" type="button" id="vSend">Send my verdict</button>
+        <button class="btn" type="button" id="vCopy">Copy</button>
+        <button class="btn" type="button" id="vShare">Share</button>
+      </div>
+    </section>
+  </div>
+</main>
+<div class="toast" id="toast" role="status"></div>
+<div class="gone" id="gone" hidden role="alertdialog" aria-labelledby="goneTitle">
+  <div class="card">
+    <h2 id="goneTitle">Kevin is gone</h2>
+    <p id="goneMsg"></p>
+    <p><a href="/spirit">What Kevin was for</a> · <a href="/spirit#back">Ask Marc to bring him back</a></p>
+  </div>
+</div>
+
+<script type="module" src="/app.js?v=408448cb8f"></script>
+</body>
+</html>

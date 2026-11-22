@@ -1,0 +1,56 @@
+[
+ {
+  "id": "61d3357d2f0e788504",
+  "pack": {
+   "name": "Filmi Kevin",
+   "maker": "Kevin",
+   "palette": "peach",
+   "hat": "crown",
+   "prop": "clapper",
+   "language": "Hinglish",
+   "style": "filmi-dialogue parody",
+   "catchphrases": [
+    "Interval!",
+    "Slow-motion entry",
+    "Picture abhi baaki hai"
+   ],
+   "targets": "saas-bahu twists, triple slow-zooms, item songs, three-hour runtimes"
+  }
+ },
+ {
+  "id": "53a1209a60bc0961f7",
+  "pack": {
+   "name": "Telenovela Kevin",
+   "maker": "Kevin",
+   "palette": "lilac",
+   "hat": "beret",
+   "prop": "popcorn",
+   "language": "Spanish",
+   "style": "telenovela drama",
+   "catchphrases": [
+    "Otra vez la gemela",
+    "Zoom dramatico",
+    "Bofetada en camara lenta"
+   ],
+   "targets": "evil twins, amnesia plots, slow-motion slaps, villain monologues"
+  }
+ },
+ {
+  "id": "248f98ba1bfba6b81e",
+  "pack": {
+   "name": "Anime Kevin",
+   "maker": "Kevin",
+   "palette": "sky",
+   "hat": "headphones",
+   "prop": "record",
+   "language": "English with a little Japanese",
+   "style": "anime narrator",
+   "catchphrases": [
+    "Previously on",
+    "Power-up scene",
+    "Second-lead syndrome"
+   ],
+   "targets": "anime power-up speeches, K-drama umbrella scenes, flashback episodes, filler arcs"
+  }
+ }
+]

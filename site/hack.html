@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hack Kevin</title>
+<meta name="description" content="Keep circulating Kevin: what you can remix, what you cannot, and how.">
+<meta name="theme-color" content="#F5B323">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+@font-face { font-family: "Shrikhand"; src: url(/fonts/shrikhand.woff2) format("woff2"); font-display: swap; }
+@font-face { font-family: "Archivo"; src: url(/fonts/archivo.woff2) format("woff2"); font-weight: 100 900; font-display: swap; }
+:root { color-scheme: light; --sleeve: #F5B323; --deep: #E89A0C; --ink: #1F1206; --soft: #4A2E0E; --pink: #D81B60; --cream: #FFF4DA; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--sleeve); color: var(--ink); font: 500 18px/1.55 "Archivo", system-ui, sans-serif; }
+::selection { background: var(--pink); color: #fff; }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+main { max-width: 980px; margin: 0 auto; padding: 24px 16px 72px; }
+a { color: var(--ink); font-weight: 800; text-underline-offset: 4px; }
+h1 { font: 400 clamp(2.6rem, 11vw, 5rem)/0.95 "Shrikhand", cursive; margin: 20px 0 16px; transform: rotate(-4deg); transform-origin: left; text-shadow: 3px 3px 0 var(--deep); }
+h2 { font-size: 22px; font-weight: 800; margin: 40px 0 10px; }
+.card { background: none; border: 0; border-top: 3px solid var(--ink); border-radius: 0; padding: 14px 0 6px; box-shadow: none; margin: 0 0 18px; }
+ul { padding-left: 22px; } li { margin: 6px 0; }
+.lede { font-size: 21px; font-weight: 700; max-width: 40ch; }
+.cols { display: grid; gap: 16px; } @media (min-width: 760px) { .cols { grid-template-columns: 1fr 1fr; } }
+dl { margin: 0; } dt { font-weight: 800; margin-top: 12px; } dd { margin: 2px 0 0; }
+.no dt::before { content: "Locked: "; color: var(--ink); font-weight: 800; }
+</style>
+</head>
+<body>
+<main>
+  <a href="/">Back to Kevin</a>
+  <h1>Hack Kevin</h1>
+  <p class="lede">Keep circulating Kevin.</p>
+  <p>Mystery Science Theater 3000 told its fans to keep circulating the tapes: copy them, trade them, share them. Fans riffing on their own is how that spirit outlived any one cast. Kevin works the same way. He is the sum of everyone's riffs and remixes, so change him. Two things stay put: the spirit, and the rules that keep him from hurting anyone.</p>
+
+  <div class="cols">
+    <div class="card">
+      <h2>Hack this</h2>
+      <dl>
+        <dt>His look</dt><dd>Palette, hat, prop. <a href="/make">Make your Kevin</a> and pick them.</dd>
+        <dt>His language</dt><dd>Hinglish, Spanish, Tagalog, anything. Set it in your remix, or just talk to him in it.</dd>
+        <dt>His humor style</dt><dd>Deadpan, filmi-dialogue parody, telenovela drama, sports commentary, nature documentary. Pick one in your remix.</dd>
+        <dt>His catchphrases</dt><dd>Add up to four of your own. They show up as buttons for anyone using your Kevin.</dd>
+        <dt>His references and targets</dt><dd>Tell him what to riff: your shows, your games, your group-chat memes, ads you're sick of.</dd>
+        <dt>The meme wording</dt><dd>"Same {thing}" mutates every week from the lines people share most. Share yours to steer it.</dd>
+        <dt>His opening bit and voice</dt><dd>The weekly patch rewrites them from the remixes that spread, and credits the remix makers.</dd>
+        <dt>The code</dt><dd>The front end and the style-pack format are open under the <a href="/charter">charter</a> license. Change anything in this column.</dd>
+      </dl>
+    </div>
+    <div class="card no">
+      <h2>Can't be hacked</h2>
+      <dl>
+        <dt>Riff the craft, roast the behavior</dt><dd>He teases what people do and choose, never what they are, because the joke is the movie, not you.</dd>
+        <dt>Punch up</dt><dd>Ads, corporate speak and the powerful are fair game; the people in the room never are.</dd>
+        <dt>Bring people together</dt><dd>He finds what people share, because that's the whole point of watching together.</dd>
+        <dt>Meet the actual person</dt><dd>He never guesses your taste from your age or background, because people are atypical.</dd>
+        <dt>No evil</dt><dd>No targeting, no slurs, no sexual stuff, no scams, no politics or sales pitches, gentle with kids, because a riff comic that hurts people is just a bully.</dd>
+        <dt>Not a billboard, not a chain letter</dt><dd>His links carry Kevin and nothing else, because the network is people, not an audience to sell to.</dd>
+        <dt>The name means the rules</dt><dd>Anyone can build their own bot. Only one that keeps the <a href="/charter">charter</a> whole may be called Kevin.</dd>
+      </dl>
+    </div>
+  </div>
+
+  <h2>Kevins around the world</h2>
+  <div class="card"><p>Same spirit, different look and voice. Open one, or start your own from it on <a href="/make">Make your Kevin</a>.</p>
+  <p id="featured">Loading...</p></div>
+  <script>
+  fetch('/featured.json').then(r => r.json()).then(list => { const el = document.getElementById('featured'); el.textContent = '';
+    for (const f of list) { const a = document.createElement('a'); a.href = '/?p=' + f.id; a.textContent = f.pack.name + ' (' + f.pack.language + ', ' + f.pack.style + ')'; a.style.display = 'block'; a.style.margin = '6px 0'; el.append(a); }
+    if (!list.length) el.textContent = 'Coming soon.'; }).catch(() => { document.getElementById('featured').textContent = 'Coming soon.'; });
+  </script>
+
+  <h2>How a remix runs</h2>
+  <div class="card"><p>Every remix goes through the same screens and a charter check before it runs. A remix that changes his look and language passes. A remix whose catchphrases mock a group of people fails, and the checker tells you which rule it broke. Passing remixes get the stamp: <b>Original Kevin ✓ · remix by you</b>. They stay on your device unless you tap Share my Kevin.</p>
+  <p><a href="/make">Make your Kevin</a> · <a href="/verify">Verify a Kevin</a> · <a href="/charter">The charter</a></p></div>
+</main>
+</body>
+</html>

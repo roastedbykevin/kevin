@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install Kevin</title>
+<meta name="description" content="Put Kevin on your home screen in ten seconds, and why it is safe.">
+<meta name="theme-color" content="#F5B323"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+@font-face { font-family: "Shrikhand"; src: url(/fonts/shrikhand.woff2) format("woff2"); font-display: swap; }
+@font-face { font-family: "Archivo"; src: url(/fonts/archivo.woff2) format("woff2"); font-weight: 100 900; font-display: swap; }
+:root { color-scheme: light; --sleeve: #F5B323; --deep: #E89A0C; --ink: #1F1206; --soft: #4A2E0E; --pink: #D81B60; --cream: #FFF4DA; }
+* { box-sizing: border-box; } body { margin: 0; background: var(--sleeve); color: var(--ink); font: 500 18px/1.5 "Archivo", system-ui, sans-serif; }
+::selection { background: var(--pink); color: #fff; } :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+main { max-width: 680px; margin: 0 auto; padding: 24px 16px 64px; } a { color: var(--ink); font-weight: 800; }
+h1 { font: 400 clamp(2.4rem, 10vw, 4.4rem)/0.95 "Shrikhand", cursive; margin: 20px 0 16px; transform: rotate(-4deg); transform-origin: left; text-shadow: 3px 3px 0 var(--deep); }
+.seal { display: inline-block; border: 4px solid var(--pink); color: var(--pink); border-radius: 14px; padding: 6px 16px; font-weight: 800; letter-spacing: 0.06em; transform: rotate(-3deg); background: var(--cream); }
+.card { background: none; border: 0; border-top: 3px solid var(--ink); border-radius: 0; padding: 14px 0 6px; box-shadow: none; margin: 0 0 18px; }
+code { word-break: break-all; font-size: 14px; } .rule { font-size: 21px; font-weight: 800; }
+form { display: flex; gap: 8px; flex-wrap: wrap; } input { flex: 1; min-width: 0; height: 48px; border: 3px solid var(--ink); border-radius: 24px; padding: 0 16px; font: 600 16px Archivo, sans-serif; background: #fff; caret-color: var(--pink); }
+button { height: 48px; border: 3px solid var(--ink); border-radius: 24px; padding: 0 18px; font: 800 16px Archivo, sans-serif; background: var(--pink); color: #fff; cursor: pointer; }
+.out { font-weight: 800; font-size: 20px; min-height: 1.5em; margin: 10px 0 0; } .bad { color: #9b0b3f; }
+</style>
+</head>
+<body>
+<main>
+  <a href="/">Back to Kevin</a>
+  <h1>Install Kevin</h1>
+  <div class="card"><p class="rule">Why bother?</p><p>He opens in one tap like an app, talks back out loud, and keeps your shared shelf (the things you and your friends riffed) on your phone. It takes ten seconds and no app store.</p></div>
+  <div class="card"><p class="rule">How</p><ul>
+    <li>iPhone or iPad (Safari): tap Share, then Add to Home Screen.</li>
+    <li>Android (Chrome): tap Install, or the menu, then Install app.</li>
+    <li>Mac (Safari): File, then Add to Dock.</li>
+    <li>Windows or Mac (Chrome or Edge): click the install icon at the right end of the address bar.</li>
+    <li>Firefox: it can't install apps; open roastedbykevin.com in Chrome, Edge or Safari.</li></ul></div>
+  <div class="card"><p class="rule">Why it's safe</p><p>Nothing you say is saved. Kevin never asks for money, logins or your location. The installed app is the same page in your browser's app sandbox; it installs nothing else. The real Kevin lives only at <b>roastedbykevin.com</b>: if an install link points anywhere else, it isn't Kevin. <a href="/verify">Check the stamp</a>.</p></div>
+  <p><a href="/">Open Kevin</a> · <a href="/charter">The charter</a></p>
+</main>
+</body>
+</html>

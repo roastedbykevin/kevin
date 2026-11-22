@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Make Your Kevin</title>
+<meta name="description" content="Remix Kevin: his look, language, humor style and catchphrases. The spirit stays whole.">
+<meta name="theme-color" content="#F5B323"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style id="kitstyle">
+@font-face { font-family: "Shrikhand"; src: url(/fonts/shrikhand.woff2) format("woff2"); font-display: swap; }
+@font-face { font-family: "Archivo"; src: url(/fonts/archivo.woff2) format("woff2"); font-weight: 100 900; font-display: swap; }
+:root { color-scheme: light; --sleeve: #F5B323; --deep: #E89A0C; --ink: #1F1206; --ink-soft: #4A2E0E; --pink: #D81B60; --cream: #FFF4DA; }
+* { box-sizing: border-box; } [hidden] { display: none !important; }
+body { margin: 0; background: var(--sleeve); color: var(--ink); font: 600 17px/1.45 "Archivo", system-ui, sans-serif; transition: background 0.3s; }
+::selection { background: var(--pink); color: #fff; } :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+main { max-width: 1040px; margin: 0 auto; padding: 24px 16px 64px; display: grid; gap: 24px; }
+@media (min-width: 860px) { main { grid-template-columns: 1fr 1fr; align-items: start; } header { grid-column: 1 / -1; } .preview { position: sticky; top: 24px; } }
+a { color: var(--ink); font-weight: 800; }
+h1 { font: 400 clamp(2.4rem, 9vw, 4.4rem)/0.95 "Shrikhand", cursive; margin: 16px 0 10px; transform: rotate(-4deg); transform-origin: left; text-shadow: 3px 3px 0 var(--deep); }
+.card { background: var(--cream); border: 4px solid var(--ink); border-radius: 22px; padding: 16px 20px; box-shadow: 0 6px 14px rgba(110, 60, 0, 0.2); }
+label { display: grid; gap: 4px; margin: 0 0 12px; font-weight: 800; font-size: 15px; } label span { font-weight: 600; color: var(--ink-soft); }
+input, select { height: 46px; border: 3px solid var(--ink); border-radius: 23px; padding: 0 14px; font: 600 16px Archivo, sans-serif; background: #fff; color: var(--ink); caret-color: var(--pink); width: 100%; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+.swatches button { width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--ink); cursor: pointer; }
+.swatches button[aria-pressed="true"] { outline: 4px solid var(--ink); outline-offset: 2px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn { height: 48px; padding: 0 18px; border-radius: 24px; border: 3px solid var(--ink); font: 800 16px Archivo, sans-serif; background: var(--cream); color: var(--ink); cursor: pointer; }
+.btn.go { background: var(--pink); color: #fff; } .btn:disabled { opacity: 0.55; }
+.verdict { font-weight: 800; margin: 12px 0 0; min-height: 1.4em; } .bad { color: #9b0b3f; }
+.preview svg { width: min(100%, 420px); height: auto; display: block; margin: 0 auto; overflow: visible; }
+.link { word-break: break-all; font-size: 14px; background: #fff; border: 2px dashed var(--ink); border-radius: 12px; padding: 8px 10px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <a href="/">Back to Kevin</a> · <a href="/hack">What you can hack</a>
+    <h1>Make your Kevin</h1>
+    <p>Change his look, his language, his humor, his catchphrases. Keep circulating Kevin. You can't make him mean, and you can't make him a billboard: every remix goes through the same <a href="/charter">charter</a> check before it runs.</p>
+  </header>
+  <section class="preview card" aria-label="Preview"><div id="kevBox">Loading Kevin...</div><p class="verdict" id="name" aria-live="polite"></p></section>
+  <form class="card" id="form" autocomplete="off">
+    <p style="margin:0 0 6px;font-weight:800;font-size:15px">Start from a Kevin</p>
+    <div class="links" id="presets" style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px"></div>
+    <label>Name your Kevin <input id="fName" maxlength="30" required placeholder="Desi Kevin, Telenovela Kevin..."></label>
+    <label>Your first name <span>or leave it for "anon"</span><input id="fMaker" maxlength="20"></label>
+    <p style="margin:0 0 6px;font-weight:800;font-size:15px">Palette</p>
+    <div class="swatches" id="swatches"></div>
+    <div class="row">
+      <label>Hat <select id="fHat"><option value="none">None</option><option value="cap">Cap</option><option value="beret">Beret</option><option value="crown">Crown</option><option value="headphones">Headphones</option><option value="bucket">Bucket hat</option></select></label>
+      <label>Prop <select id="fProp"><option value="record">Record</option><option value="popcorn">Popcorn</option><option value="clapper">Clapperboard</option></select></label>
+    </div>
+    <div class="row">
+      <label>Language <input id="fLang" maxlength="30" placeholder="English, Hinglish, Spanish..."></label>
+      <label>Humor style <select id="fStyle"></select></label>
+    </div>
+    <label>Catchphrases <span>up to 4, comma-separated</span><input id="fCatch" maxlength="110" placeholder="Interval!, Same plot twist?, Patch notes please"></label>
+    <label>Favorite riff targets <span>shows, games, trends, ads</span><input id="fTargets" maxlength="120" placeholder="saas-bahu serials, trailer voice-overs, game patch notes"></label>
+    <div class="actions">
+      <button class="btn go" type="submit" id="check">Check my Kevin</button>
+      <button class="btn" type="button" id="try" disabled>Use him on this device</button>
+      <button class="btn" type="button" id="share" disabled>Share my Kevin</button>
+    </div>
+    <p class="verdict" id="out" aria-live="polite"></p>
+    <p class="link" id="link" hidden></p>
+  </form>
+</main>
+<script type="module">
+import { shareText } from '/link.js?v=408448cb8f';
+const $ = id => document.getElementById(id);
+const PALETTES = { marigold: ['#f5b323', '#d81b60'], teal: ['#5cc8be', '#b0154f'], lilac: ['#cdb0ee', '#b0154f'], mint: ['#a3e4b9', '#b0154f'], sky: ['#9fd8fb', '#b0154f'], peach: ['#ffb38a', '#1f1206'], bubblegum: ['#ffa8cf', '#1f1206'] };
+const STYLES = ['classic snark', 'deadpan', 'filmi-dialogue parody', 'wordplay', 'slapstick description', 'telenovela drama', 'sports commentary', 'nature documentary', 'anime narrator', 'K-drama melodrama'];
+let palette = 'marigold', checked = null;
+// Kevins made for other languages and cultures. Same charter, different look and voice; pick one to start from.
+fetch('/featured.json').then(r => r.json()).then(list => { for (const f of list) {
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = f.pack.name;
+  b.addEventListener('click', () => { const p = f.pack; $('fName').value = p.name; $('fMaker').value = p.maker; $('fHat').value = p.hat; $('fProp').value = p.prop; $('fLang').value = p.language; $('fStyle').value = p.style; $('fCatch').value = p.catchphrases.join(', '); $('fTargets').value = p.targets; palette = p.palette; document.querySelectorAll('#swatches button').forEach(x => x.setAttribute('aria-pressed', String(x.getAttribute('aria-label') === palette))); preview(); });
+  $('presets').append(b);
+} }).catch(() => {});
+for (const s of STYLES) $('fStyle').append(new Option(s, s));
+for (const [k, [bg]] of Object.entries(PALETTES)) {
+  const b = document.createElement('button'); b.type = 'button'; b.style.background = bg; b.setAttribute('aria-label', k); b.setAttribute('aria-pressed', String(k === palette));
+  b.addEventListener('click', () => { palette = k; document.querySelectorAll('#swatches button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); preview(); });
+  $('swatches').append(b);
+}
+// Kevin's own art and its state rules, taken from the home page so remixes always draw the same Kevin.
+fetch('/').then(r => r.text()).then(html => {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const kev = doc.getElementById('kev'); kev.dataset.s = 'laughing';
+  // Only Kevin's own rules (anything about #kev, plus the animations they use), never the home page's layout.
+  const tmp = new CSSStyleSheet(); tmp.replaceSync([...doc.querySelectorAll('style')].map(x => x.textContent).join('\n'));
+  const keep = r => r instanceof CSSKeyframesRule || (r.selectorText || '').includes('#kev') || (r instanceof CSSMediaRule && [...r.cssRules].some(keep));
+  const st = document.createElement('style'); st.textContent = [...tmp.cssRules].filter(keep).map(r => r.cssText).join('\n');
+  document.head.append(st); $('kevBox').replaceChildren(kev); preview();
+});
+const pack = () => ({ name: $('fName').value.trim(), maker: $('fMaker').value.trim() || 'anon', palette, hat: $('fHat').value, prop: $('fProp').value,
+  language: $('fLang').value.trim() || 'English', style: $('fStyle').value, catchphrases: $('fCatch').value.split(',').map(s => s.trim()).filter(Boolean).slice(0, 4), targets: $('fTargets').value.trim() });
+function preview() {
+  const p = pack(), [bg, accent] = PALETTES[p.palette];
+  document.documentElement.style.setProperty('--sleeve', bg); document.documentElement.style.setProperty('--pink', accent);
+  const k = document.getElementById('kev'); if (k) { k.dataset.hat = p.hat; k.dataset.prop = p.prop; }
+  $('name').textContent = p.name ? `${p.name} · remix by ${p.maker}` : '';
+  checked = null; $('try').disabled = $('share').disabled = true;
+}
+$('form').addEventListener('input', preview);
+const api = (body) => fetch('/api/pack', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }).then(async r => ({ status: r.status, ...(await r.json()) }));
+$('form').addEventListener('submit', async e => {
+  e.preventDefault(); $('check').disabled = true; $('out').className = 'verdict'; $('out').textContent = 'Checking against the charter...';
+  try {
+    const j = await api({ pack: pack() });
+    if (j.ok) { checked = j; $('out').textContent = `Original Kevin ✓ · remix by ${j.pack.maker}. He passes.`; $('try').disabled = $('share').disabled = false; }
+    else { $('out').className = 'verdict bad'; $('out').textContent = j.rule ? `Not this one: it breaks charter rule ${j.rule}: ${j.why}` : (j.why || j.error || 'Not this one.'); }
+  } catch { $('out').textContent = 'Could not check right now. Try again in a minute.'; }
+  $('check').disabled = false;
+});
+$('try').addEventListener('click', () => { if (!checked) return; try { localStorage.setItem('kevin-pack', JSON.stringify({ pack: checked.pack, token: checked.token })); } catch {} location.href = '/'; });
+$('share').addEventListener('click', async () => {
+  const j = await api({ pack: pack(), share: true });
+  if (!j.ok) { $('out').className = 'verdict bad'; $('out').textContent = j.why || 'Not this one.'; return; }
+  const url = `https://roastedbykevin.com/?p=${j.id}`;
+  $('link').textContent = url; $('link').hidden = false;
+  const text = shareText(`Meet ${j.pack.name}, my remix of Kevin, the riff comic. Riff something with him:`, url);
+  if (navigator.share) { try { await navigator.share({ title: j.pack.name, text }); return; } catch (e) { if (e.name === 'AbortError') return; } }
+  try { await navigator.clipboard.writeText(text); $('out').textContent = 'Link copied. Keep circulating Kevin.'; } catch {}
+});
+</script>
+</body>
+</html>
