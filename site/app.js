@@ -1,5 +1,5 @@
-import { readTester, friendLink, readCard, cardLink, HOME, shareText } from '/link.js?v=408448cb8f';
-import { drawCard } from '/card.js?v=408448cb8f';
+import { readTester, friendLink, readCard, cardLink, HOME, shareText } from '/link.js?v=a4ec40dee0';
+import { drawCard } from '/card.js?v=a4ec40dee0';
 
 const $ = id => document.getElementById(id);
 // Read once, up front: what kind of link this page was opened from (functions below use these).

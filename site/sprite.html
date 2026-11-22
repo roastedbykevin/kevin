@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kevin Sprite</title>
+<meta name="description" content="Kevin, small: a riff comic that sits on your screen.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+@font-face { font-family: "Archivo"; src: url(/fonts/archivo.woff2) format("woff2"); font-weight: 100 900; font-display: swap; }
+:root { color-scheme: light; --ink: #1F1206; --soft: #4A2E0E; --pink: #D81B60; --cream: #FFF4DA; --sleeve: #F5B323; }
+* { box-sizing: border-box; } [hidden] { display: none !important; }
+html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; font: 700 14px/1.3 "Archivo", system-ui, sans-serif; color: var(--ink); }
+body.tab { background: var(--sleeve); display: grid; place-items: center; }
+.sprite { position: relative; width: 220px; height: 260px; user-select: none; -webkit-user-select: none; }
+.grip { position: absolute; left: 60px; right: 60px; top: 0; height: 14px; border-radius: 7px; background: rgba(31, 18, 6, 0.25); -webkit-app-region: drag; cursor: grab; opacity: 0; transition: opacity 0.2s; }
+.sprite:hover .grip, .sprite:focus-within .grip { opacity: 1; }
+.app .grip { opacity: 0.55; } /* in the desktop app the grip is the drag handle; the face stays clickable */
+.balloon {
+  position: absolute; left: 6px; right: 6px; top: 16px; background: var(--cream); border: 3px solid var(--ink); border-radius: 14px;
+  padding: 7px 10px; font-size: 13px; line-height: 1.3; max-height: 100px; overflow: auto; box-shadow: 0 4px 10px rgba(60, 30, 0, 0.25);
+}
+.balloon::after { content: ""; position: absolute; left: 76%; bottom: -10px; width: 14px; height: 14px; background: var(--cream); border-right: 3px solid var(--ink); border-bottom: 3px solid var(--ink); transform: translateX(-50%) rotate(45deg); }
+.head { position: absolute; right: 8px; bottom: 36px; width: 104px; cursor: pointer; }
+.head svg { width: 104px; height: auto; display: block; overflow: visible; }
+.chips { position: absolute; left: 8px; bottom: 42px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+.sprite:hover .chips, .sprite:focus-within .chips, .open .chips { opacity: 1; pointer-events: auto; }
+.chips button, .ask button { border: 2px solid var(--ink); background: var(--cream); color: var(--ink); border-radius: 999px; font: 800 12px "Archivo", sans-serif; padding: 5px 9px; cursor: pointer; }
+.chips button.go, .ask button.go { background: var(--pink); color: #fff; }
+.ask { position: absolute; left: 6px; right: 6px; bottom: 4px; display: flex; gap: 4px; }
+.ask input { flex: 1; min-width: 0; border: 2px solid var(--ink); border-radius: 999px; padding: 5px 9px; font: 600 12px "Archivo", sans-serif; background: #fff; caret-color: var(--pink); }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div class="sprite" id="sprite">
+  <div class="grip" aria-hidden="true"></div>
+  <div class="balloon" id="says" aria-live="polite" hidden></div>
+  <div class="head" id="head" role="button" tabindex="0" aria-label="Talk to Kevin"><span id="kevBox"></span></div>
+  <form class="ask" id="ask" hidden autocomplete="off"><input id="msg" maxlength="300" placeholder="Type to Kevin" aria-label="Type to Kevin"><button class="go" type="submit" aria-label="Send">Go</button></form>
+  <div class="chips" id="chips"><button class="go" type="button" data-say="Riff it">Riff it</button><button type="button" data-say="Roast me">Roast me</button><button type="button" id="talk" hidden>Hold to talk</button></div>
+</div>
+<script type="module" src="/sprite.js?v=a4ec40dee0"></script>
+</body>
+</html>

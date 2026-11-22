@@ -1,0 +1,28 @@
+{
+  "name": "kevin-desktop",
+  "productName": "Kevin",
+  "version": "0.1.0",
+  "description": "Desktop Kevin: the riff comic from roastedbykevin.com, small, on your screen.",
+  "main": "main.js",
+  "license": "SEE LICENSE IN LICENSE-KEVIN",
+  "author": "roastedbykevin",
+  "homepage": "https://roastedbykevin.com",
+  "scripts": {
+    "start": "electron .",
+    "smoke": "node smoke.js",
+    "dist:mac": "electron-builder --mac --universal --publish never",
+    "dist:win": "electron-builder --win portable --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "33.4.11",
+    "electron-builder": "25.1.8"
+  },
+  "build": {
+    "appId": "com.roastedbykevin.kevin",
+    "productName": "Kevin",
+    "files": ["main.js", "tray.png", "tray-16.png"],
+    "directories": { "buildResources": "build", "output": "dist" },
+    "mac": { "target": [{ "target": "dmg", "arch": ["universal"] }], "category": "public.app-category.entertainment", "artifactName": "Kevin-Desktop-mac.dmg", "identity": null, "extendInfo": { "LSUIElement": true } },
+    "win": { "target": [{ "target": "portable", "arch": ["x64"] }], "artifactName": "Kevin-Desktop-win.exe" }
+  }
+}
