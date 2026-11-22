@@ -1,8 +1,8 @@
 // Kevin, small: the same brain, charter and safety as the full site, on a 220x260 face that sits on a screen.
 // ?app=1 when the desktop app hosts it, ?smoke=1 for its hidden smoke test; tester links (?for=...) keep working.
-import { readTester } from '/link.js?v=5a8d1c1324';
-import { holdToTalk, canRecord, speakComic, pickVoice, forSpeech } from '/hear.js?v=5a8d1c1324';
-import { cadence } from '/cadence.js?v=5a8d1c1324';
+import { readTester } from '/link.js?v=b3c7bb962b';
+import { holdToTalk, canRecord, speakComic, pickVoice, forSpeech, hush, loadKevinVoice } from '/hear.js?v=b3c7bb962b';
+import { cadence } from '/cadence.js?v=b3c7bb962b';
 const $ = id => document.getElementById(id);
 const q = new URLSearchParams(location.search);
 const APP = q.get('app') === '1', SMOKE = q.get('smoke') === '1';
@@ -14,7 +14,7 @@ const history = [];
 let busy = false, kev = null, quietUntil = 0, roasting = false, lastReply = '';
 const cad = cadence(SMOKE ? { baseMs: 0, jitter: 0 } : {});
 const quiet = () => SMOKE || Date.now() < quietUntil;
-window.kevinQuiet = ms => { quietUntil = Date.now() + ms; speechSynthesis?.cancel(); say('Fine. Quiet for an hour. I will judge silently.'); };
+window.kevinQuiet = ms => { quietUntil = Date.now() + ms; hush(); say('Fine. Quiet for an hour. I will judge silently.'); };
 
 // Kevin's own face and only his rules, taken from the home page so every Kevin looks the same.
 fetch('/').then(r => r.text()).then(html => {
@@ -34,7 +34,11 @@ function say(text, ms = 12000) { $('says').textContent = text; $('says').hidden 
 let voice = null, muted = false, tappedAt = 0;
 try { muted = localStorage.getItem('kevin-sprite-mute') === '1'; } catch {}
 if (window.speechSynthesis) { voice = pickVoice(); speechSynthesis.addEventListener?.('voiceschanged', () => { voice = pickVoice(); }); }
-window.kevinMute = on => { muted = !!on; try { localStorage.setItem('kevin-sprite-mute', muted ? '1' : '0'); } catch {} if (muted) speechSynthesis?.cancel(); paintMute(); };
+window.kevinMute = on => { muted = !!on; try { localStorage.setItem('kevin-sprite-mute', muted ? '1' : '0'); } catch {} if (muted) hush(); paintMute(); };
+// Kevin's own voice loads once: at the first tap in a browser, at start in the desktop app (no tap needed there).
+const voiceUp = () => { if (!muted && !SMOKE) loadKevinVoice(note => say(note, 4000)); };
+addEventListener('pointerdown', voiceUp, { once: true, capture: true });
+if (window.kevinDesktop) setTimeout(voiceUp, 3000);
 function speak(said) {
   const text = forSpeech(said, { you: [tester?.name], others: [tester?.from] }); // never a name out loud
   const overVideo = typeof media !== 'undefined' && media?.fullscreen && Date.now() - tappedAt > 60000;

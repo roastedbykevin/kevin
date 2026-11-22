@@ -1,6 +1,6 @@
-import { readTester, friendLink, readCard, cardLink, HOME, shareText } from '/link.js?v=5a8d1c1324';
-import { holdToTalk, canRecord, forSpeech } from '/hear.js?v=5a8d1c1324';
-import { drawCard } from '/card.js?v=5a8d1c1324';
+import { readTester, friendLink, readCard, cardLink, HOME, shareText } from '/link.js?v=b3c7bb962b';
+import { holdToTalk, canRecord, forSpeech, hush, loadKevinVoice, speakKevin, kevinVoiceReady } from '/hear.js?v=b3c7bb962b';
+import { drawCard } from '/card.js?v=b3c7bb962b';
 
 const $ = id => document.getElementById(id);
 // Read once, up front: what kind of link this page was opened from (functions below use these).
@@ -119,7 +119,7 @@ function paintMute() {
 paintMute();
 mute.addEventListener('click', () => {
   soundOn = !soundOn; paintMute(); store.set('kevin-sound', soundOn ? 'on' : 'off');
-  if (!soundOn && window.speechSynthesis) speechSynthesis.cancel();
+  if (!soundOn) hush();
 });
 
 // ---- voice out: pick the warmest English voice the device has
@@ -136,6 +136,7 @@ function pickVoice() {
 if (synth) { pickVoice(); synth.addEventListener?.('voiceschanged', pickVoice); }
 let unlocked = false;
 const unlock = () => { // iOS only speaks after a speak() inside a tap
+  if (soundOn) loadKevinVoice(note => toast(note)); // Kevin's own voice, once; the device voice speaks until it's ready
   if (unlocked || !synth) return; unlocked = true;
   const u = new SpeechSynthesisUtterance(' '); u.volume = 0; synth.speak(u);
 };
@@ -149,10 +150,14 @@ const spokenNames = () => ({
 });
 function speak(said) {
   const text = forSpeech(said, spokenNames());
+  if (soundOn && kevinVoiceReady()) return speakKevin(text, { onStart: () => set('talking'), onEnd: () => set('idle') }).then(ok => ok || osSpeak(text));
+  return osSpeak(text);
+}
+function osSpeak(text) {
   return new Promise(done => {
     const fallback = () => { set('talking'); setTimeout(() => { set('idle'); done(); }, Math.min(6000, 900 + text.length * 45)); };
     if (!soundOn || !synth) return fallback();
-    synth.cancel();
+    hush();
     const u = new SpeechSynthesisUtterance(text);
     if (voice) u.voice = voice;
     u.lang = voice?.lang || 'en-US'; u.rate = 1.06; u.pitch = 1.08;
@@ -336,7 +341,7 @@ if (!SR) useClips();
 let rec = null, heard = '', downAt = 0;
 function listen() {
   if (!SR || rec || busy) return;
-  if (synth) synth.cancel();
+  hush();
   rec = new SR(); rec.lang = 'en-US'; rec.interimResults = true; rec.continuous = false; heard = '';
   rec.onresult = e => { heard = [...e.results].map(r => r[0].transcript).join(' '); msg.value = heard; };
   rec.onerror = e => {

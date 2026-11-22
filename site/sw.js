@@ -1,9 +1,10 @@
-// Opens like an app and shows Kevin offline; talking to him always needs the network.
+// Opens like an app and shows Kevin offline; talking to him always needs the network. Kevin's own voice lives in the
+// browser's 'transformers-cache' (kept across updates, so the 86 MB download happens once).
 const CACHE = 'kevin-v3';
 const SHELL = ['/', '/app.js', '/link.js', '/card.js', '/favicon.svg', '/fonts/shrikhand.woff2', '/fonts/archivo.woff2', '/icon-192.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE && !k.startsWith('transformers')).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', e => {
   const u = new URL(e.request.url);
