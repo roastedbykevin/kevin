@@ -3,7 +3,7 @@
 // small settings file, every permission denied (no mic, camera or location), and links open in the normal browser.
 // Now playing is opt-in (one switch): only a title, an allow-listed app and play state are read, and only sent to
 // Kevin's own page, which sends them only to roastedbykevin.com/api.
-const { app, BrowserWindow, Tray, Menu, shell, clipboard, session, screen, ipcMain, globalShortcut } = require('electron');
+const { app, BrowserWindow, Tray, Menu, shell, clipboard, session, screen, ipcMain, globalShortcut, systemPreferences } = require('electron');
 const { nowPlaying } = require('./media');
 const path = require('path');
 const fs = require('fs');
@@ -79,7 +79,11 @@ function tuckAway() {
 // ---- the mic opens only for one press of the talk button: the page arms it, and only an audio request within the
 // next 5 seconds is allowed. Everything else (camera, location, notifications...) is always denied.
 let armedUntil = 0, micOn = false;
-ipcMain.handle('mic:arm', () => { armedUntil = Date.now() + 5000; return true; });
+ipcMain.handle('mic:arm', async () => {
+  // macOS asks once (the first hold of Talk); a "no" can be changed in Privacy & Security, Microphone
+  if (process.platform === 'darwin' && systemPreferences.getMediaAccessStatus('microphone') === 'not-determined') await systemPreferences.askForMediaAccess('microphone');
+  armedUntil = Date.now() + 5000; return true;
+});
 ipcMain.on('mic:state', (_e, on) => { micOn = !!on; if (tray) { tray.setToolTip(on ? 'Kevin is listening' : 'Kevin'); if (process.platform === 'darwin') tray.setTitle(on ? '●' : ''); } });
 const micAllowed = (perm, details) => perm === 'media' && Date.now() < armedUntil && (details?.mediaTypes || ['audio']).every(t => t === 'audio');
 
