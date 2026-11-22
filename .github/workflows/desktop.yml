@@ -29,6 +29,8 @@ jobs:
       - run: npm ci
       - name: Smoke test (hidden window, live /sprite must load Kevin)
         run: npm run smoke
+      - name: Smoke test with mocked now-playing (Kevin must riff the mocked title)
+        run: npm run smoke:media
       - run: npm run ${{ matrix.dist }}
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'

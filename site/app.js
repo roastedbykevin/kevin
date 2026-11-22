@@ -1,5 +1,5 @@
-import { readTester, friendLink, readCard, cardLink, HOME, shareText } from '/link.js?v=a4ec40dee0';
-import { drawCard } from '/card.js?v=a4ec40dee0';
+import { readTester, friendLink, readCard, cardLink, HOME, shareText } from '/link.js?v=4838320024';
+import { drawCard } from '/card.js?v=4838320024';
 
 const $ = id => document.getElementById(id);
 // Read once, up front: what kind of link this page was opened from (functions below use these).
@@ -521,4 +521,15 @@ if (JURY) {
 } else if (juryMine) {
   // a player who called a jury sees the verdict and Kevin's ruling when it lands
   fetch(`/api/jury?j=${encodeURIComponent(juryMine.token)}`).then(r => r.json()).then(j => { if (j.decided) paintJury(j, juryMine.token, true); }).catch(() => {});
+}
+
+// A card made from desktop Kevin riffing what's playing: ?riffcard=<title>&line=<his riff>
+{
+  const q = new URLSearchParams(location.search), title = (q.get('riffcard') || '').slice(0, 60), line = (q.get('line') || '').slice(0, 300);
+  if (title && line) {
+    document.body.classList.remove('fresh');
+    lastSame = { thing: 'riff', riff: true, line, core: line, roast: '' }; cardNo = null;
+    says.textContent = `Your riff card on ${title}. Send it to someone who watched it with you.`;
+    setTimeout(paintCard, 300);
+  }
 }

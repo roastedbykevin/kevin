@@ -44,7 +44,7 @@ button { height: 48px; border: 3px solid var(--ink); border-radius: 24px; paddin
   <p><a href="/install">How to install Kevin, and why</a> · <a href="/spirit">Why Kevin riffs</a> · <a href="https://github.com/roastedbykevin/kevin" rel="noopener">The code</a></p>
 </main>
 <script type="module">
-import { isOriginal } from '/link.js?v=a4ec40dee0';
+import { isOriginal } from '/link.js?v=4838320024';
 const $ = id => document.getElementById(id);
 $('host').textContent = location.hostname;
 fetch('/charter?raw').then(r => { $('hash').textContent = r.headers.get('x-charter-sha256') || 'unavailable'; });
