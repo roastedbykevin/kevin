@@ -1,6 +1,6 @@
-import { readTester, friendLink, readCard, cardLink, HOME, shareText } from '/link.js?v=47d79208ee';
-import { holdToTalk, canRecord } from '/hear.js?v=47d79208ee';
-import { drawCard } from '/card.js?v=47d79208ee';
+import { readTester, friendLink, readCard, cardLink, HOME, shareText } from '/link.js?v=5a8d1c1324';
+import { holdToTalk, canRecord, forSpeech } from '/hear.js?v=5a8d1c1324';
+import { drawCard } from '/card.js?v=5a8d1c1324';
 
 const $ = id => document.getElementById(id);
 // Read once, up front: what kind of link this page was opened from (functions below use these).
@@ -28,7 +28,9 @@ async function goneNow(j) {
 }
 const post = (url, body) => fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...body, link: LINK, ...(url === '/api/roast' ? { voice: soundOn, ...(PACK?.token ? { pack: PACK.token } : {}) } : {}) }) })
   .then(async r => { const j = await r.json().catch(() => ({})); if (r.status === 410) await goneNow(j); return j; });
-fetch(`/api/hello${LINK ? '?link=' + LINK : ''}`).then(async r => { if (r.status === 410) await goneNow(await r.json()); }).catch(() => {});
+const ENTRY = GIFT ? 'gift' : JURY ? 'jury' : location.search.includes('c=') ? 'card' : location.search.includes('for=') ? 'tester' : location.search.includes('p=') ? 'remix' : /\/wall/.test(document.referrer) ? 'wall' : 'direct';
+const SURFACE = matchMedia('(display-mode: standalone)').matches || navigator.standalone ? 'installed' : /iPhone|Android.*Mobile/.test(navigator.userAgent) ? 'phone' : 'web';
+fetch(`/api/hello?entry=${ENTRY}&surface=${SURFACE}${LINK ? '&link=' + LINK : ''}`).then(async r => { if (r.status === 410) await goneNow(await r.json()); }).catch(() => {});
 async function shareOrCopy(title, text, url, file) {
   const full = url ? shareText(text, url) : text; // every link share says why, how to install, and why it's safe
   if (file && navigator.canShare?.({ files: [file] })) { try { await navigator.share({ files: [file], title, text: full }); return; } catch (e) { if (e.name === 'AbortError') return; } }
@@ -139,7 +141,14 @@ const unlock = () => { // iOS only speaks after a speak() inside a tap
 };
 addEventListener('pointerdown', unlock, { capture: true });
 addEventListener('keydown', unlock, { capture: true });
-function speak(text) {
+// Names Kevin was given here; he never says them out loud. The listener is "you", others "your friend".
+let juryNames = [];
+const spokenNames = () => ({
+  you: [tester?.name, giftIn?.to, pairing?.a, pairing?.b, answering?.a, answering?.b, ...juryNames],
+  others: [tester?.from, giftIn?.from]
+});
+function speak(said) {
+  const text = forSpeech(said, spokenNames());
   return new Promise(done => {
     const fallback = () => { set('talking'); setTimeout(() => { set('idle'); done(); }, Math.min(6000, 900 + text.length * 45)); };
     if (!soundOn || !synth) return fallback();
@@ -501,6 +510,7 @@ async function juryStatus(token, mine) {
   paintJury(j, token, mine);
 }
 function paintJury(j, token, mine) {
+  juryNames = [j.a, j.b];
   $('juryPanel').hidden = false;
   $('juryLine').textContent = `Kevin's line: "${j.line}"`;
   const verb = j.q === 'roast' ? 'got roasted harder' : 'riffed it better';

@@ -1,7 +1,7 @@
 {
   "name": "kevin-desktop",
   "productName": "Kevin",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Desktop Kevin: the riff comic from roastedbykevin.com, small, on your screen.",
   "main": "main.js",
   "license": "SEE LICENSE IN LICENSE-KEVIN",
@@ -12,7 +12,9 @@
     "smoke": "node smoke.js",
     "smoke:media": "node smoke.js media",
     "dist:mac": "electron-builder --mac --universal --publish never",
-    "dist:win": "electron-builder --win portable --x64 --publish never"
+    "dist:win": "electron-builder --win portable --x64 --publish never",
+    "smoke:wake": "node smoke.js wake",
+    "test:wake": "node test/wake.test.js"
   },
   "devDependencies": {
     "electron": "33.4.11",
@@ -25,8 +27,18 @@
       "main.js",
       "media.js",
       "preload.js",
+      "ear.html",
+      "ear.js",
+      "ear-preload.js",
+      "wake.js",
+      "models/*.onnx",
       "tray.png",
-      "tray-16.png"
+      "tray-16.png",
+      "!node_modules/**/*",
+      "node_modules/onnxruntime-web/package.json",
+      "node_modules/onnxruntime-web/dist/ort.wasm.min.js",
+      "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm",
+      "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.mjs"
     ],
     "directories": {
       "buildResources": "build",
@@ -46,7 +58,7 @@
       "identity": null,
       "extendInfo": {
         "LSUIElement": true,
-        "NSMicrophoneUsageDescription": "Kevin hears you only while you hold Talk. Nothing is kept."
+        "NSMicrophoneUsageDescription": "Kevin hears you only while you hold Talk, or, if you turn it on, listens on this computer for 'Hey Kevin'."
       }
     },
     "win": {
@@ -60,5 +72,8 @@
       ],
       "artifactName": "Kevin-Desktop-win.exe"
     }
+  },
+  "dependencies": {
+    "onnxruntime-web": "1.20.1"
   }
 }

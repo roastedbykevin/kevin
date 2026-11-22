@@ -1,9 +1,11 @@
 // Desktop Kevin: a frameless, transparent, always-on-top window that shows the live https://roastedbykevin.com/sprite.
 // Same brain, charter and safety as the site (nothing of Kevin runs locally). No secrets, no file access beyond its own
-// small settings file, every permission denied (no mic, camera or location), and links open in the normal browser.
+// small settings file, every permission denied except the mic as described below, and links open in the normal browser.
+// "Hey Kevin" is opt-in (off by default): a hidden local ear window with no network scores the mic on this computer
+// and drops the audio; only what is said right after the wake goes to Kevin's page, like a hold-to-talk clip.
 // Now playing is opt-in (one switch): only a title, an allow-listed app and play state are read, and only sent to
 // Kevin's own page, which sends them only to roastedbykevin.com/api.
-const { app, BrowserWindow, Tray, Menu, shell, clipboard, session, screen, ipcMain, globalShortcut, systemPreferences } = require('electron');
+const { app, BrowserWindow, Tray, Menu, shell, clipboard, session, screen, ipcMain, globalShortcut, systemPreferences, powerMonitor } = require('electron');
 const { nowPlaying } = require('./media');
 const path = require('path');
 const fs = require('fs');
@@ -48,7 +50,8 @@ function menu() {
     { label: "Let Kevin see what's playing", type: 'checkbox', checked: state.media === true, click: item => { state.media = item.checked; save(state); if (!item.checked) send(null); } },
     { label: 'Not during this', click: () => win.webContents.executeJavaScript("document.getElementById('notThis') && document.getElementById('notThis').click()").catch(() => {}) },
     { label: 'Mute Kevin', type: 'checkbox', checked: !!state.muted, click: item => { state.muted = item.checked; save(state); win.webContents.executeJavaScript(`window.kevinMute && window.kevinMute(${item.checked})`).catch(() => {}); } },
-    { label: 'Quiet for an hour', click: () => win.webContents.executeJavaScript('window.kevinQuiet && window.kevinQuiet(3600000)').catch(() => {}) },
+    { label: "Let Kevin listen for 'Hey Kevin'", type: 'checkbox', checked: state.wake === true, click: item => setWake(item.checked) },
+    { label: 'Quiet for an hour', click: () => { quietUntil = Date.now() + 3600000; earSync(); win.webContents.executeJavaScript('window.kevinQuiet && window.kevinQuiet(3600000)').catch(() => {}); } },
     { label: 'Use my Kevin link (copy it first)', click: () => {
       try {
         const u = new URL(clipboard.readText().trim());
@@ -84,7 +87,79 @@ ipcMain.handle('mic:arm', async () => {
   if (process.platform === 'darwin' && systemPreferences.getMediaAccessStatus('microphone') === 'not-determined') await systemPreferences.askForMediaAccess('microphone');
   armedUntil = Date.now() + 5000; return true;
 });
-ipcMain.on('mic:state', (_e, on) => { micOn = !!on; if (tray) { tray.setToolTip(on ? 'Kevin is listening' : 'Kevin'); if (process.platform === 'darwin') tray.setTitle(on ? '●' : ''); } });
+ipcMain.on('mic:state', (_e, on) => { micOn = !!on; dot(); });
+// The tray says what the mic is doing: ● Kevin is recording you, ◦ he is only listening for "Hey Kevin".
+function dot() {
+  if (!tray) return;
+  const rec = micOn || earRec;
+  const t = rec ? 'Kevin is listening' : ear && earLive ? "Kevin is listening for 'Hey Kevin'" : 'Kevin';
+  tray.setToolTip(t); if (process.platform === 'darwin') tray.setTitle(rec ? '●' : ear && earLive ? '◦' : '');
+}
+
+// ---- "Hey Kevin": the ear window exists only while the switch is on and Kevin isn't quieted. Closing it stops the mic.
+const EAR_FIXTURE = process.env.KEVIN_EAR_FIXTURE || ''; // tests only: a 16 kHz wav fed to the ear instead of the mic
+let ear = null, earLive = false, earRec = false, quietUntil = 0, quietT = 0;
+async function setWake(on) {
+  if (on && process.platform === 'darwin' && systemPreferences.getMediaAccessStatus('microphone') !== 'granted') on = await systemPreferences.askForMediaAccess('microphone');
+  state.wake = !!on; save(state); if (tray) tray.setContextMenu(menu()); earSync();
+}
+function earSync() {
+  const want = (state.wake === true || !!EAR_FIXTURE) && Date.now() >= quietUntil;
+  if (want && !ear) {
+    const s = session.fromPartition('kevin-ear'); // its own in-memory session: no network at all, mic only
+    s.webRequest.onBeforeRequest((d, cb) => cb({ cancel: !d.url.startsWith('file://') }));
+    s.setPermissionRequestHandler((_wc, perm, cb, details) => cb(perm === 'media' && (details?.mediaTypes || ['audio']).every(t => t === 'audio')));
+    s.setPermissionCheckHandler((_wc, perm, _o, details) => perm === 'media' && (!details?.mediaType || details.mediaType === 'audio'));
+    ear = new BrowserWindow({ show: false, width: 100, height: 100, skipTaskbar: true, webPreferences: { session: s, sandbox: true, contextIsolation: true, nodeIntegration: false, backgroundThrottling: false, preload: path.join(__dirname, 'ear-preload.js') } });
+    ear.loadFile(path.join(__dirname, 'ear.html'));
+    ear.webContents.on('render-process-gone', () => { if (ear && !ear.isDestroyed()) ear.close(); });
+    // closing ends any recording in progress (the page leaves "listening"), and reopens if it should still listen
+    ear.on('closed', () => { ear = null; earLive = false; if (earRec) { earRec = false; win.webContents.send('heard', null); } dot(); setTimeout(earSync, 1000); });
+  }
+  if (!want && ear) ear.close();
+  clearTimeout(quietT); if (state.wake && quietUntil > Date.now()) quietT = setTimeout(earSync, quietUntil - Date.now() + 500);
+  dot();
+}
+ipcMain.handle('ear:threshold', () => Number(process.env.KEVIN_WAKE_THRESHOLD) || null); // null: wake.js's tested default
+ipcMain.handle('ear:fixture?', () => !!EAR_FIXTURE);
+ipcMain.on('ear:ready', e => {
+  earLive = true; dot();
+  if (EAR_FIXTURE) (async () => {
+    // the ear must have no network: a request from it to Kevin's own site has to fail
+    const net = await e.sender.executeJavaScript("fetch('https://roastedbykevin.com/api/hello').then(() => 'reached', () => 'blocked')").catch(() => 'blocked');
+    if (net !== 'blocked') { console.log('SMOKE FAIL: the ear reached the network'); app.exit(1); return; }
+    console.log('SMOKE ear has no network');
+    const b = fs.readFileSync(EAR_FIXTURE), d = b.indexOf('data') + 8; e.sender.send('ear:fixture', b.buffer.slice(b.byteOffset + d, b.byteOffset + b.length - ((b.length - d) % 2)));
+  })();
+});
+// The mic was refused: turn the switch off and say so. Anything else (device gone, model error): reopen in a few seconds.
+let earFails = 0, lastFail = 0;
+ipcMain.on('ear:failed', (_e, why) => {
+  earLive = false; dot();
+  if (SMOKE) { console.log('SMOKE FAIL: ear: ' + why); app.exit(1); return; }
+  if (Date.now() - lastFail > 600000) earFails = 0; // only failures close together count
+  lastFail = Date.now();
+  if (/^denied/.test(why) || ++earFails > 3) {
+    state.wake = false; save(state); if (tray) tray.setContextMenu(menu());
+    win.webContents.executeJavaScript(`window.kevinSay && window.kevinSay(${JSON.stringify(/^denied/.test(why) ? "I can't hear you. To use 'Hey Kevin', allow the microphone for Kevin in your settings." : "My ear stopped working, so 'Hey Kevin' is off. Hold Talk instead.")})`).catch(() => {});
+  }
+  if (ear && !ear.isDestroyed()) ear.close();
+});
+let wokeAt = 0;
+ipcMain.on('ear:woke', (_e, score) => {
+  wokeAt = Date.now(); earRec = true; dot();
+  if (SMOKE) console.log(`SMOKE wake at score ${score.toFixed(3)}`);
+  if (!SMOKE) { calledAt = Date.now(); clearTimeout(hideT); win.showInactive(); }
+  win.webContents.executeJavaScript('window.kevinWoke && window.kevinWoke()').catch(() => {});
+});
+ipcMain.on('ear:heard', (_e, clip) => {
+  earRec = false; dot();
+  if (SMOKE && EAR_FIXTURE) {
+    const ok = clip && clip.byteLength > 16044 && Buffer.from(clip.slice(0, 4)).toString() === 'RIFF' && new DataView(clip).getUint32(24, true) === 16000;
+    console.log(ok ? `SMOKE OK: woke on "Hey Kevin" and handed over a ${((clip.byteLength - 44) / 32000).toFixed(1)} s 16 kHz wav` : 'SMOKE FAIL: the clip is not a 16 kHz wav'); app.exit(ok ? 0 : 1); return;
+  }
+  win.webContents.send('heard', Date.now() - wokeAt < 15000 && clip && clip.byteLength > 1200 ? clip : null); // null: nothing usable, leave "listening"
+});
 const micAllowed = (perm, details) => perm === 'media' && Date.now() < armedUntil && (details?.mediaTypes || ['audio']).every(t => t === 'audio');
 
 // ---- now playing: poll the allow-listed apps every 8 s while the switch is on; tell the page only when it changes
@@ -141,7 +216,10 @@ app.whenReady().then(() => {
   if (!SMOKE && process.platform === 'darwin') app.dock?.hide(); // a menu-bar app, not a dock app
   create();
   setTimeout(poll, 1500);
+  if (EAR_FIXTURE) { earSync(); setTimeout(() => { console.log('SMOKE FAIL: no wake on the fixture'); app.exit(1); }, 90000); return; }
   if (SMOKE) { smoke(); return; }
+  earSync();
+  powerMonitor.on('resume', () => { if (ear && !ear.isDestroyed()) ear.close(); else earSync(); });
   if (state.media == null) win.once('ready-to-show', () => win.showInactive()); // first run: show the one consent question
   if (state.muted) win.webContents.once('did-finish-load', () => win.webContents.executeJavaScript('window.kevinMute && window.kevinMute(true)').catch(() => {}));
   globalShortcut.register('CommandOrControl+Shift+K', call);

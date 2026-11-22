@@ -10,4 +10,4 @@ bot; only one that keeps the charter whole may be called Kevin.
 
 ## Desktop Kevin
 
-`desktop/` is a tiny Electron app that floats the live https://roastedbykevin.com/sprite on your screen (frameless, always on top, tray menu, no permissions). Builds come from `.github/workflows/desktop.yml` on a `desktop-v*` tag and land in Releases. Smoke test: `cd desktop && npm ci && npm run smoke` (hidden window).
+`desktop/` is a tiny Electron app that floats the live https://roastedbykevin.com/sprite on your screen (frameless, always on top, tray menu; the microphone only while you hold Talk or, if you turn it on, for an on-device `Hey Kevin` wake word). Builds come from `.github/workflows/desktop.yml` on a `desktop-v*` tag and land in Releases. Smoke test: `cd desktop && npm ci && npm run smoke` (hidden window).

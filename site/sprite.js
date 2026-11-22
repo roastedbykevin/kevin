@@ -1,8 +1,8 @@
 // Kevin, small: the same brain, charter and safety as the full site, on a 220x260 face that sits on a screen.
 // ?app=1 when the desktop app hosts it, ?smoke=1 for its hidden smoke test; tester links (?for=...) keep working.
-import { readTester } from '/link.js?v=47d79208ee';
-import { holdToTalk, canRecord, speakComic, pickVoice } from '/hear.js?v=47d79208ee';
-import { cadence } from '/cadence.js?v=47d79208ee';
+import { readTester } from '/link.js?v=5a8d1c1324';
+import { holdToTalk, canRecord, speakComic, pickVoice, forSpeech } from '/hear.js?v=5a8d1c1324';
+import { cadence } from '/cadence.js?v=5a8d1c1324';
 const $ = id => document.getElementById(id);
 const q = new URLSearchParams(location.search);
 const APP = q.get('app') === '1', SMOKE = q.get('smoke') === '1';
@@ -35,7 +35,8 @@ let voice = null, muted = false, tappedAt = 0;
 try { muted = localStorage.getItem('kevin-sprite-mute') === '1'; } catch {}
 if (window.speechSynthesis) { voice = pickVoice(); speechSynthesis.addEventListener?.('voiceschanged', () => { voice = pickVoice(); }); }
 window.kevinMute = on => { muted = !!on; try { localStorage.setItem('kevin-sprite-mute', muted ? '1' : '0'); } catch {} if (muted) speechSynthesis?.cancel(); paintMute(); };
-function speak(text) {
+function speak(said) {
+  const text = forSpeech(said, { you: [tester?.name], others: [tester?.from] }); // never a name out loud
   const overVideo = typeof media !== 'undefined' && media?.fullscreen && Date.now() - tappedAt > 60000;
   if (quiet() || muted || overVideo || !window.speechSynthesis) { set('talking'); setTimeout(() => set('idle'), Math.min(5000, 800 + text.length * 40)); return; }
   speakComic(text, { voice, onStart: () => set('talking'), onEnd: () => set('idle') });
@@ -137,5 +138,21 @@ if (DESK) {
   DESK.consent().then(c => { if (c === null && !SMOKE) $('consent').hidden = false; });
   $('cYes').addEventListener('click', () => { DESK.setConsent(true); $('consent').hidden = true; say("Deal. Play something and I'll heckle it. Quiet for an hour is in my menu."); });
   $('cNo').addEventListener('click', () => { DESK.setConsent(false); $('consent').hidden = true; say('Fine. I will only judge your font.'); });
+  // "Hey Kevin" (desktop 0.2.2+, opt-in): the app's ear heard the wake on the computer itself and hands over only
+  // what was said next, which goes to /api/hear exactly like a hold-to-talk clip.
+  window.kevinWoke = () => { tappedAt = Date.now(); $('sprite').classList.add('listening'); set('listening'); };
+  window.kevinSay = text => say(text);
+  DESK.onHeard?.(async clip => {
+    $('sprite').classList.remove('listening');
+    if (!clip) { set('idle'); return; } // the ear stopped or nothing usable was said
+    set('thinking');
+    try {
+      const j = await (await fetch('/api/hear', { method: 'POST', headers: { 'content-type': 'audio/wav' }, body: clip })).json();
+      set('idle'); if (j.text) send(j.text); else say(j.error || "Didn't catch that. Say 'Hey Kevin' again.");
+    } catch { set('idle'); say('Kevin is catching his breath. Try again in a minute.'); }
+  });
 }
 paintMedia();
+
+// One anonymous visit count: where Kevin was opened (desktop app or a tab). No ids.
+fetch(`/api/hello?entry=${tester ? 'tester' : 'direct'}&surface=${APP ? 'desktop' : /iPhone|Android.*Mobile/.test(navigator.userAgent) ? 'phone' : 'web'}${LINK ? '&link=' + LINK : ''}`).catch(() => {});

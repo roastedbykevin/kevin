@@ -32,6 +32,27 @@ export function holdToTalk(button, { onText, onState = () => {}, beforeOpen = as
   for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) button.addEventListener(ev, () => { down = false; stop(); });
 }
 
+// Kevin never says anyone's name out loud (the text on screen may show it). The listener's own name becomes "you";
+// anyone else's becomes "your friend". Names are the ones Kevin was given: tester, gift, pair, jury, card.
+const NOT_NAMES = new Set(['a', 'an', 'the', 'and', 'my', 'your', 'our', 'mystery', 'friend', 'kevin', 'me', 'you', 'mom', 'dad']);
+export function forSpeech(text, { you = [], others = [] } = {}) {
+  let t = String(text || '');
+  const swap = (raw, sub, possessive) => {
+    for (const word of String(raw || '').split(/[\s,&]+/).filter(w => w.length > 1 && !NOT_NAMES.has(w.toLowerCase()))) {
+      const name = word.charAt(0).toUpperCase() + word.slice(1); // Kevin writes names capitalized; "will" stays a verb
+      const n = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), B = '(?<![\\p{L}])', E = '(?![\\p{L}])';
+      t = t.replace(new RegExp(`^\\s*${n}${E}\\s*[,!:]+\\s*`, 'u'), '')                          // "Sadaf! ..." -> "..."
+        .replace(new RegExp(`,\\s*${n}${E}(?=[\\s]*[,.!?]|\\s*$)`, 'gu'), '')                   // "..., Sadaf." -> "..."
+        .replace(new RegExp(`${B}${n}['’]s${E}`, 'gu'), possessive)                            // "Sadaf's" -> "your"
+        .replace(new RegExp(`${B}${n}${E}`, 'gu'), sub);                                      // "Sadaf" -> "you"
+    }
+  };
+  for (const n of you) swap(n, 'you', 'your');
+  for (const n of others) swap(n, 'your friend', "your friend's");
+  t = t.replace(/\s{2,}/g, ' ').replace(/\s+([,.!?])/g, '$1').replace(/([.!?]\s+)(\p{Ll})/gu, (_, a, b) => a + b.toUpperCase()).trim();
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
 // Kevin's delivery: deadpan, a beat before the punchline. Splits the reply at sentence ends and pauses before the last.
 export function speakComic(text, { voice = null, beat = 450, onStart = () => {}, onEnd = () => {} } = {}) {
   const synth = window.speechSynthesis; if (!synth) { onEnd(); return; }
