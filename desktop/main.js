@@ -3,7 +3,7 @@
 // small settings file, every permission denied (no mic, camera or location), and links open in the normal browser.
 // Now playing is opt-in (one switch): only a title, an allow-listed app and play state are read, and only sent to
 // Kevin's own page, which sends them only to roastedbykevin.com/api.
-const { app, BrowserWindow, Tray, Menu, shell, clipboard, session, screen, ipcMain } = require('electron');
+const { app, BrowserWindow, Tray, Menu, shell, clipboard, session, screen, ipcMain, globalShortcut } = require('electron');
 const { nowPlaying } = require('./media');
 const path = require('path');
 const fs = require('fs');
@@ -29,7 +29,7 @@ function create() {
   const b = state.bounds && state.bounds.x != null ? state.bounds : { x: area.x + area.width - W - 24, y: area.y + area.height - H - 24 };
   win = new BrowserWindow({
     x: b.x, y: b.y, width: W, height: H, frame: false, transparent: true, resizable: false, alwaysOnTop: true,
-    skipTaskbar: true, hasShadow: false, show: !SMOKE, backgroundColor: '#00000000', title: 'Kevin',
+    skipTaskbar: true, hasShadow: false, show: false, // hidden until something plays or he is called backgroundColor: '#00000000', title: 'Kevin',
     webPreferences: { contextIsolation: true, sandbox: true, nodeIntegration: false, spellcheck: false, preload: path.join(__dirname, 'preload.js') }
   });
   win.setAlwaysOnTop(true, 'floating');
@@ -43,10 +43,11 @@ function create() {
 
 function menu() {
   return Menu.buildFromTemplate([
-    { label: 'Show Kevin', click: () => { win.showInactive(); } },
+    { label: process.platform === 'darwin' ? 'Call Kevin (Cmd+Shift+K)' : 'Call Kevin (Ctrl+Shift+K)', click: call },
     { label: 'Hide Kevin', click: () => win.hide() },
     { label: "Let Kevin see what's playing", type: 'checkbox', checked: state.media === true, click: item => { state.media = item.checked; save(state); if (!item.checked) send(null); } },
     { label: 'Not during this', click: () => win.webContents.executeJavaScript("document.getElementById('notThis') && document.getElementById('notThis').click()").catch(() => {}) },
+    { label: 'Mute Kevin', type: 'checkbox', checked: !!state.muted, click: item => { state.muted = item.checked; save(state); win.webContents.executeJavaScript(`window.kevinMute && window.kevinMute(${item.checked})`).catch(() => {}); } },
     { label: 'Quiet for an hour', click: () => win.webContents.executeJavaScript('window.kevinQuiet && window.kevinQuiet(3600000)').catch(() => {}) },
     { label: 'Use my Kevin link (copy it first)', click: () => {
       try {
@@ -66,6 +67,22 @@ function menu() {
   ]);
 }
 
+// ---- hidden until there's something to riff: he comes out when media plays or when called, and tucks away after
+let playing = false, hideT = 0, calledAt = 0;
+function call() { calledAt = Date.now(); clearTimeout(hideT); win.showInactive(); win.focus(); win.webContents.executeJavaScript('window.kevinCall && window.kevinCall()').catch(() => {}); }
+function comeOut() { if (SMOKE) return; clearTimeout(hideT); if (!win.isVisible()) win.showInactive(); }
+function tuckAway() {
+  win.webContents.executeJavaScript('window.kevinCredits && window.kevinCredits()').catch(() => {});
+  clearTimeout(hideT); hideT = setTimeout(() => { if (!playing && Date.now() - calledAt > 120000) win.hide(); }, 6000);
+}
+
+// ---- the mic opens only for one press of the talk button: the page arms it, and only an audio request within the
+// next 5 seconds is allowed. Everything else (camera, location, notifications...) is always denied.
+let armedUntil = 0, micOn = false;
+ipcMain.handle('mic:arm', () => { armedUntil = Date.now() + 5000; return true; });
+ipcMain.on('mic:state', (_e, on) => { micOn = !!on; if (tray) { tray.setToolTip(on ? 'Kevin is listening' : 'Kevin'); if (process.platform === 'darwin') tray.setTitle(on ? '●' : ''); } });
+const micAllowed = (perm, details) => perm === 'media' && Date.now() < armedUntil && (details?.mediaTypes || ['audio']).every(t => t === 'audio');
+
 // ---- now playing: poll the allow-listed apps every 8 s while the switch is on; tell the page only when it changes
 let last = '';
 const send = m => { const k = JSON.stringify(m); if (k !== last && win && !win.isDestroyed()) { last = k; win.webContents.send('media', m ? { title: m.title, app: m.app, playing: m.playing, fullscreen: !!m.fullscreen } : null); } };
@@ -74,6 +91,10 @@ async function poll() {
   if (state.media === true || process.env.KEVIN_MOCK_MEDIA) {
     const m = await nowPlaying().catch(() => null);
     send(m && m.title ? m : null);
+    const now = !!(m && m.title && m.playing && !m.fullscreen);
+    if (now && !playing) comeOut();
+    if (!now && playing && !(m && m.fullscreen)) tuckAway();
+    playing = now;
     // Slide next to the playing window when a new title starts (Windows tells us where it is; Mac stays put).
     if (m && m.rect && m.playing && !m.fullscreen && m.title !== slidFor && win.isVisible()) {
       slidFor = m.title;
@@ -110,13 +131,19 @@ async function smoke() {
 if (!SMOKE && !app.requestSingleInstanceLock()) app.quit();
 app.whenReady().then(() => {
   if (SMOKE && process.platform === 'darwin') app.dock?.hide();
-  session.defaultSession.setPermissionRequestHandler((_wc, _perm, cb) => cb(false)); // no mic, camera, location, notifications
+  session.defaultSession.setPermissionRequestHandler((_wc, perm, cb, details) => cb(micAllowed(perm, details)));
+  session.defaultSession.setPermissionCheckHandler((_wc, perm) => perm === 'media' && Date.now() < armedUntil);
   state = load();
   if (!SMOKE && process.platform === 'darwin') app.dock?.hide(); // a menu-bar app, not a dock app
   create();
   setTimeout(poll, 1500);
   if (SMOKE) { smoke(); return; }
+  if (state.media == null) win.once('ready-to-show', () => win.showInactive()); // first run: show the one consent question
+  if (state.muted) win.webContents.once('did-finish-load', () => win.webContents.executeJavaScript('window.kevinMute && window.kevinMute(true)').catch(() => {}));
+  globalShortcut.register('CommandOrControl+Shift+K', call);
   tray = new Tray(path.join(__dirname, process.platform === 'darwin' ? 'tray-16.png' : 'tray.png'));
   tray.setToolTip('Kevin'); tray.setContextMenu(menu());
+  tray.on('click', call);
 });
 app.on('window-all-closed', () => app.quit());
+app.on('will-quit', () => globalShortcut.unregisterAll());

@@ -1,7 +1,8 @@
 // Kevin, small: the same brain, charter and safety as the full site, on a 220x260 face that sits on a screen.
 // ?app=1 when the desktop app hosts it, ?smoke=1 for its hidden smoke test; tester links (?for=...) keep working.
-import { readTester } from '/link.js?v=4838320024';
-import { cadence } from '/cadence.js?v=4838320024';
+import { readTester } from '/link.js?v=47d79208ee';
+import { holdToTalk, canRecord, speakComic, pickVoice } from '/hear.js?v=47d79208ee';
+import { cadence } from '/cadence.js?v=47d79208ee';
 const $ = id => document.getElementById(id);
 const q = new URLSearchParams(location.search);
 const APP = q.get('app') === '1', SMOKE = q.get('smoke') === '1';
@@ -29,16 +30,15 @@ const set = s => { if (kev) kev.dataset.s = s; };
 let hideT = 0;
 function say(text, ms = 12000) { $('says').textContent = text; $('says').hidden = false; clearTimeout(hideT); hideT = setTimeout(() => { if (!busy) $('says').hidden = true; }, ms); }
 
-// voice out: the warmest English voice the device has, and only when not quiet
-let voice = null;
-const pick = () => { const en = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)); voice = en.find(v => /natural|premium|enhanced/i.test(v.name)) || en.find(v => /en-us/i.test(v.lang)) || en[0] || null; };
-if (window.speechSynthesis) { pick(); speechSynthesis.addEventListener?.('voiceschanged', pick); }
+// voice out: a deadpan voice with a beat before the punchline; muted on request; never over full-screen video unless tapped
+let voice = null, muted = false, tappedAt = 0;
+try { muted = localStorage.getItem('kevin-sprite-mute') === '1'; } catch {}
+if (window.speechSynthesis) { voice = pickVoice(); speechSynthesis.addEventListener?.('voiceschanged', () => { voice = pickVoice(); }); }
+window.kevinMute = on => { muted = !!on; try { localStorage.setItem('kevin-sprite-mute', muted ? '1' : '0'); } catch {} if (muted) speechSynthesis?.cancel(); paintMute(); };
 function speak(text) {
-  if (quiet() || !window.speechSynthesis) { set('talking'); setTimeout(() => set('idle'), Math.min(5000, 800 + text.length * 40)); return; }
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text); if (voice) u.voice = voice; u.rate = 1.06; u.pitch = 1.08;
-  u.onstart = () => set('talking'); u.onend = u.onerror = () => set('idle');
-  speechSynthesis.speak(u);
+  const overVideo = typeof media !== 'undefined' && media?.fullscreen && Date.now() - tappedAt > 60000;
+  if (quiet() || muted || overVideo || !window.speechSynthesis) { set('talking'); setTimeout(() => set('idle'), Math.min(5000, 800 + text.length * 40)); return; }
+  speakComic(text, { voice, onStart: () => set('talking'), onEnd: () => set('idle') });
 }
 
 async function send(text, media = null) {
@@ -49,7 +49,7 @@ async function send(text, media = null) {
   history.push({ role: 'user', content: text });
   let reply;
   try {
-    const r = await fetch('/api/roast', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ messages: history.slice(-12), link: LINK, ...(tester ? { tester } : {}), ...(media ? { media } : {}) }) });
+    const r = await fetch('/api/roast', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ messages: history.slice(-12), link: LINK, voice: !muted && !SMOKE, ...(tester ? { tester } : {}), ...(media ? { media } : {}) }) });
     const j = await r.json();
     if (j.skip) { history.pop(); busy = false; set('idle'); $('says').hidden = true; return null; }
     reply = j.reply || j.message || "My Wi-Fi just roasted me instead. Try that again.";
@@ -73,27 +73,32 @@ let telling = false; // the form either talks to Kevin or tells him what's playi
 $('ask').addEventListener('submit', e => { e.preventDefault(); const t = $('msg').value; $('msg').value = ''; if (telling) { telling = false; $('msg').placeholder = 'Type to Kevin'; if (t.trim()) { onMedia({ title: t.trim(), app: 'Told by you', playing: true }); riffMedia('tick'); } return; } send(t); });
 for (const b of document.querySelectorAll('#chips [data-say]')) b.addEventListener('click', () => send(b.dataset.say));
 
-// hold to talk: the mic listens only while the button is held (not in the desktop app, whose engine has no speech service)
+// hold to talk: the mic opens only while the button is held. Desktop Kevin and browsers without speech recognition
+// record a short clip for /api/hear; browsers with it use their own.
 const SR = !APP && (window.SpeechRecognition || window.webkitSpeechRecognition);
+const t = $('talk');
+const ring = on => { $('sprite').classList.toggle('listening', on); DESK?.micState?.(on); };
 if (SR) {
-  const t = $('talk'); t.hidden = false; let rec = null, heard = '';
-  t.addEventListener('pointerdown', () => { rec = new SR(); rec.lang = 'en-US'; rec.interimResults = true; heard = ''; rec.onresult = e => { heard = [...e.results].map(r => r[0].transcript).join(' '); }; rec.onend = () => { rec = null; t.textContent = 'Hold to talk'; if (heard.trim()) send(heard); }; try { rec.start(); t.textContent = 'Listening'; set('listening'); } catch { rec = null; } });
+  t.hidden = false; let rec = null, heard = '';
+  t.addEventListener('pointerdown', () => { tappedAt = Date.now(); rec = new SR(); rec.lang = 'en-US'; rec.interimResults = true; heard = ''; rec.onresult = e => { heard = [...e.results].map(r => r[0].transcript).join(' '); }; rec.onerror = e => { if (/network|service-not-allowed/.test(e.error)) useClip(); }; rec.onend = () => { rec = null; ring(false); t.textContent = 'Hold to talk'; if (heard.trim()) send(heard); }; try { rec.start(); ring(true); t.textContent = 'Listening'; set('listening'); } catch { rec = null; } });
   for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) t.addEventListener(ev, () => rec?.stop());
+} else if (canRecord()) useClip();
+function useClip() {
+  const fresh = t.cloneNode(true); t.replaceWith(fresh); fresh.hidden = false; fresh.textContent = 'Hold to talk';
+  holdToTalk(fresh, {
+    beforeOpen: async () => { tappedAt = Date.now(); await DESK?.micArm?.(); },
+    onState: st => { set(st); ring(st === 'listening'); fresh.textContent = st === 'listening' ? 'Listening' : 'Hold to talk'; },
+    onText: (text, err) => { if (text) send(text); else if (err) say(err === 'too short' ? 'Hold the button while you talk.' : err); }
+  });
 }
 
-// Now and then, an idle bit: rare (every 15 to 40 minutes), text only, never asks for anything, never while quiet.
-const BITS = ["I'm judging that font.", 'That tab has been open since the last sequel.', 'Your wallpaper has the energy of a DVD menu.', 'Blink twice if this meeting is a director\'s cut.', 'Somebody approved that color scheme. Brave.', 'I give this window layout two stars. One for effort.'];
-let lastBit = -1;
-function idle() {
-  setTimeout(() => {
-    if (!quiet() && !busy && $('says').hidden && document.visibilityState === 'visible') {
-      let i; do { i = Math.floor(Math.random() * BITS.length); } while (i === lastBit && BITS.length > 1);
-      lastBit = i; say(BITS[i], 7000); set('laughing'); setTimeout(() => set('idle'), 700);
-    }
-    idle();
-  }, (15 + Math.random() * 25) * 60000);
-}
-if (!SMOKE) idle();
+// Mute, the credits line when the show ends, and a call from the hotkey or the tray (desktop Kevin).
+function paintMute() { const b = $('muteBtn'); if (b) b.textContent = muted ? 'Sound on' : 'Mute'; }
+$('muteBtn')?.addEventListener('click', () => window.kevinMute(!muted));
+paintMute();
+window.kevinCredits = () => { if (!busy) { say("That's it? Roll credits.", 5000); speak("That's it? Roll credits."); } };
+window.kevinCall = () => { tappedAt = Date.now(); $('head').click(); };
+for (const el of [$('head'), $('chips')]) el.addEventListener('pointerdown', () => { tappedAt = Date.now(); });
 
 // ==== Riffing along with what's playing (the theater row, on your screen) ====
 const DESK = window.kevinDesktop || null; // only inside desktop Kevin (its preload); a browser tab cannot see other apps

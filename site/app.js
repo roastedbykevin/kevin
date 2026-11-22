@@ -1,5 +1,6 @@
-import { readTester, friendLink, readCard, cardLink, HOME, shareText } from '/link.js?v=4838320024';
-import { drawCard } from '/card.js?v=4838320024';
+import { readTester, friendLink, readCard, cardLink, HOME, shareText } from '/link.js?v=47d79208ee';
+import { holdToTalk, canRecord } from '/hear.js?v=47d79208ee';
+import { drawCard } from '/card.js?v=47d79208ee';
 
 const $ = id => document.getElementById(id);
 // Read once, up front: what kind of link this page was opened from (functions below use these).
@@ -25,7 +26,7 @@ async function goneNow(j) {
   if (j.deadLink) { try { localStorage.removeItem('kevin-link'); } catch {} }
   throw new Error('gone');
 }
-const post = (url, body) => fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...body, link: LINK, ...(PACK?.token && url === '/api/roast' ? { pack: PACK.token } : {}) }) })
+const post = (url, body) => fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...body, link: LINK, ...(url === '/api/roast' ? { voice: soundOn, ...(PACK?.token ? { pack: PACK.token } : {}) } : {}) }) })
   .then(async r => { const j = await r.json().catch(() => ({})); if (r.status === 410) await goneNow(j); return j; });
 fetch(`/api/hello${LINK ? '?link=' + LINK : ''}`).then(async r => { if (r.status === 410) await goneNow(await r.json()); }).catch(() => {});
 async function shareOrCopy(title, text, url, file) {
@@ -311,7 +312,18 @@ $('fShare').addEventListener('click', () => shareOrCopy('Kevin wants to roast yo
 
 // ---- voice in: hold to talk, or tap to start and it stops when you pause
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-if (!SR) document.body.classList.add('no-voice');
+if (!SR && !canRecord()) document.body.classList.add('no-voice');
+// No speech recognition (Firefox), or it fails (iPhone with dictation off): record a clip for /api/hear instead.
+let clipMode = false;
+function useClips() {
+  if (clipMode || !canRecord()) return; clipMode = true;
+  const fresh = mic.cloneNode(true); mic.replaceWith(fresh);
+  holdToTalk(fresh, {
+    onState: st => { set(st); fresh.toggleAttribute('data-on', st === 'listening'); $('micLabel').textContent = st === 'listening' ? 'Listening' : 'Hold to talk'; },
+    onText: (t, err) => { if (t) send(t); else if (err) { says.textContent = err === 'too short' ? 'Hold the button while you talk.' : err; you.textContent = ''; } }
+  });
+}
+if (!SR) useClips();
 let rec = null, heard = '', downAt = 0;
 function listen() {
   if (!SR || rec || busy) return;
@@ -319,7 +331,8 @@ function listen() {
   rec = new SR(); rec.lang = 'en-US'; rec.interimResults = true; rec.continuous = false; heard = '';
   rec.onresult = e => { heard = [...e.results].map(r => r[0].transcript).join(' '); msg.value = heard; };
   rec.onerror = e => {
-    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { says.textContent = "I can't hear you. Allow the microphone, or just type to me."; you.textContent = ''; }
+    if (e.error === 'service-not-allowed' || e.error === 'network') { useClips(); says.textContent = 'Hold the talk button again. I switched how I listen.'; you.textContent = ''; }
+    else if (e.error === 'not-allowed') { says.textContent = "I can't hear you. Allow the microphone, or just type to me."; you.textContent = ''; }
   };
   rec.onend = () => {
     rec = null; mic.removeAttribute('data-on'); $('micLabel').textContent = 'Hold to talk';
