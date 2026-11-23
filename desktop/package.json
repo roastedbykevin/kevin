@@ -1,7 +1,7 @@
 {
   "name": "kevin-desktop",
   "productName": "Kevin",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Desktop Kevin: the riff comic from roastedbykevin.com, small, on your screen.",
   "main": "main.js",
   "license": "SEE LICENSE IN LICENSE-KEVIN",
@@ -55,11 +55,16 @@
       ],
       "category": "public.app-category.entertainment",
       "artifactName": "Kevin-Desktop-mac.dmg",
-      "identity": null,
       "extendInfo": {
         "LSUIElement": true,
-        "NSMicrophoneUsageDescription": "Kevin hears you only while you hold Talk, or, if you turn it on, listens on this computer for 'Hey Kevin'."
-      }
+        "NSMicrophoneUsageDescription": "Kevin hears you only while you hold Talk, or, if you turn it on, listens on this computer for 'Hey Kevin'.",
+        "NSAppleEventsUsageDescription": "Kevin reads only the title and play state from the media apps you allow, to riff along."
+      },
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "notarize": true
     },
     "win": {
       "target": [
@@ -71,6 +76,9 @@
         }
       ],
       "artifactName": "Kevin-Desktop-win.exe"
+    },
+    "dmg": {
+      "sign": true
     }
   },
   "dependencies": {

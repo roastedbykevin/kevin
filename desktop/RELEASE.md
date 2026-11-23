@@ -1,5 +1,7 @@
 Kevin, small, on your screen: the theater row, made real. He floats above your windows, riffs when you click him, and now and then judges your font.
 
+**New in 0.2.4: Kevin is signed on a Mac.** The Mac app is signed with an Apple Developer ID and notarized by Apple, so it opens like any other app, with no "can't check" warning and no trip to Privacy & Security.
+
 **New in 0.2.3: say "Hey Kevin".** It's off until you turn it on: choose "Let Kevin listen for 'Hey Kevin'" in his menu (on a Mac, macOS asks once for the microphone). Then say "Hey Kevin" and what you want ("Hey Kevin, roast my playlist"). The listening happens on your computer. A small wake-word model inside the app listens only for his name; the sound is checked and thrown away, never kept and never sent. Only what you say right after "Hey Kevin" (until you stop talking, at most 8 seconds) goes to roastedbykevin.com to become text, just like holding Talk. If he mishears something else as his name (in testing, under one time in two hours of TV, music and talk), the next few seconds of room sound go the same way and are not kept. A small ◦ in the menu bar means he's listening for his name; ● means he's hearing you. "Quiet for an hour" stops the listening, and turning the switch off stops it for good.
 
 **New in 0.2.2: hold-to-talk works on a Mac.** Kevin now asks macOS for the microphone the first time you hold Talk (click OK). Before this, macOS refused him the mic without asking. If you said no by mistake: System Settings, then Privacy & Security, then Microphone, and turn Kevin on. He still hears you only while you hold Talk, and keeps nothing. He also never says anyone's name out loud now.
@@ -8,10 +10,10 @@ Kevin, small, on your screen: the theater row, made real. He floats above your w
 
 **New in 0.2: Kevin riffs along with what's playing.** Turn on "Let Kevin see what's playing" (he asks once; it's also in his menu). He then reads only the title, the app and play or pause from Spotify, Apple Music, Apple TV, VLC, and browser tabs on YouTube, Netflix, Prime Video, Disney+, Max, Hulu and Apple TV. Never other windows, never screenshots, and titles are never stored. While something plays he heckles its craft every few minutes, cheers or groans when it changes, and offers Riff along and Make a card. Ignore him three times and he riffs half as often; "Quiet for an hour" and "Not during this" are one click away, and he stays out of full-screen video unless you tap him in. On a Mac, the first time he reads an app, macOS asks whether Kevin may control it: say OK to the apps you want him to watch along with. Same Kevin as https://roastedbykevin.com: the app shows the live site, so nothing of Kevin runs on your computer. The only permission he asks for is the microphone, and only while you hold Talk; no camera, no location, no screenshots.
 
-**Mac (Kevin-Desktop-mac.dmg):** open the .dmg, drag Kevin to Applications, then open Kevin. macOS says it can't check him: click Done, open System Settings, then Privacy & Security, scroll down to "Kevin was blocked" and click Open Anyway, then Open. (On macOS 14 or older: right-click Kevin, choose Open, then Open.) Kevin lives in the menu bar (the little face): Show, Hide, Quiet for an hour, Quit.
+**Mac (Kevin-Desktop-mac.dmg):** open the .dmg, drag Kevin to Applications, then open Kevin. Kevin lives in the menu bar (the little face): Show, Hide, Quiet for an hour, Quit.
 
 **Windows (Kevin-Desktop-win.exe):** no install; double-click it. The first time, Windows SmartScreen may say it protected your PC: click More info, then Run anyway. Kevin lives in the tray by the clock.
 
 **Your own Kevin link** (a tester link or a remix): copy it, then choose "Use my Kevin link" from Kevin's menu.
 
-Unsigned while Kevin is new; the source is public in this repo (desktop/). Only one that keeps the charter whole may be called Kevin (LICENSE-KEVIN).
+The Windows build is unsigned while Kevin is new; the source is public in this repo (desktop/). Only one that keeps the charter whole may be called Kevin (LICENSE-KEVIN).

@@ -35,7 +35,45 @@ jobs:
         run: npm run test:wake
       - name: Smoke test for "Hey Kevin" (a recorded clip fed to the ear, no mic, must wake and hand over the ask)
         run: npm run smoke:wake
-      - run: npm run ${{ matrix.dist }}
+      - name: Signing key for notarytool (Mac; the build stops if a secret is missing, so no unsigned Mac build ships)
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          APPLE_API_KEY_B64: ${{ secrets.APPLE_API_KEY }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+        run: |
+          for v in APPLE_API_KEY_B64 CSC_LINK CSC_KEY_PASSWORD APPLE_API_KEY_ID APPLE_API_ISSUER; do
+            [ -n "${!v}" ] || { echo "::error::secret for $v is not set"; exit 1; }
+          done
+          umask 077
+          printf '%s' "$APPLE_API_KEY_B64" | base64 --decode > "$RUNNER_TEMP/notary.p8"
+          echo "APPLE_API_KEY=$RUNNER_TEMP/notary.p8" >> "$GITHUB_ENV"
+      - name: Build, sign, notarize and staple the app (Mac)
+        if: runner.os == 'macOS'
+        run: npm run ${{ matrix.dist }}
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+      - name: Notarize and staple the dmg, then check it as Gatekeeper would (Mac)
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+        run: |
+          xcrun notarytool submit "dist/${{ matrix.file }}" --key "$APPLE_API_KEY" --key-id "$APPLE_API_KEY_ID" --issuer "$APPLE_API_ISSUER" --wait
+          xcrun stapler staple "dist/${{ matrix.file }}"
+          xcrun stapler validate "dist/${{ matrix.file }}"
+          spctl -a -vvv -t install "dist/${{ matrix.file }}"
+          rm -f "$APPLE_API_KEY"
+      - name: Build (Windows, unsigned)
+        if: runner.os == 'Windows'
+        run: npm run ${{ matrix.dist }}
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
       - uses: actions/upload-artifact@v4
