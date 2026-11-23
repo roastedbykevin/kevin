@@ -1,6 +1,6 @@
 Kevin, small, on your screen: the theater row, made real. He floats above your windows, riffs when you click him, and now and then judges your font.
 
-**New in 0.2.4: Kevin is signed on a Mac.** The Mac app is signed with an Apple Developer ID and notarized by Apple, so it opens like any other app, with no "can't check" warning and no trip to Privacy & Security.
+**New in 0.2.5: Kevin is signed on a Mac.** The Mac app is signed with an Apple Developer ID and notarized by Apple, so it opens like any other app, with no "can't check" warning and no trip to Privacy & Security.
 
 **New in 0.2.3: say "Hey Kevin".** It's off until you turn it on: choose "Let Kevin listen for 'Hey Kevin'" in his menu (on a Mac, macOS asks once for the microphone). Then say "Hey Kevin" and what you want ("Hey Kevin, roast my playlist"). The listening happens on your computer. A small wake-word model inside the app listens only for his name; the sound is checked and thrown away, never kept and never sent. Only what you say right after "Hey Kevin" (until you stop talking, at most 8 seconds) goes to roastedbykevin.com to become text, just like holding Talk. If he mishears something else as his name (in testing, under one time in two hours of TV, music and talk), the next few seconds of room sound go the same way and are not kept. A small ◦ in the menu bar means he's listening for his name; ● means he's hearing you. "Quiet for an hour" stops the listening, and turning the switch off stops it for good.
 
